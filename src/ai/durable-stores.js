@@ -17,7 +17,7 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
   const mysqlUrl = mysqlConnectionString(databaseUrl);
   let url;
   if (mysqlUrl) { try { url = new URL(databaseUrl); } catch { /* Report below without exposing input. */ } }
-  const databaseName = String(environment.DATABASE ?? environment.TIDB_DATABASE ?? url?.pathname?.slice(1) ?? '').trim();
+  const databaseName = String(url?.pathname?.slice(1) ?? (databaseUrl ? '' : environment.TIDB_DATABASE ?? environment.DATABASE ?? '')).trim();
   const missingSettings = [];
   if (!databaseUrl && !(environment.HOST || environment.TIDB_HOST)) missingSettings.push('HOST');
   if (!databaseUrl && !(environment.TIDB_USER)) missingSettings.push('TIDB_USER');
@@ -26,8 +26,8 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
   const conflicts = [];
   if (postgresUrl || postgresConnectionString(databaseUrl)) conflicts.push('DATABASE_CONFIGURATION_CONFLICT');
   const sourcePairs = [
-    ['HOST_SOURCES_DIFFER', environment.HOST, environment.TIDB_HOST, url?.hostname],
-    ['DATABASE_SOURCES_DIFFER', environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
+    ['HOST_SOURCES_DIFFER', databaseUrl ? undefined : environment.HOST, environment.TIDB_HOST, url?.hostname],
+    ['DATABASE_SOURCES_DIFFER', databaseUrl ? undefined : environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
     // PORT belongs to the Vercel/HTTP runtime. Only compare the TiDB-specific
     // override with the port embedded in DATABASE_URL.
     ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, url?.port]
@@ -68,7 +68,8 @@ function configuredDatabaseAdapterModule(environment) {
       : inspected.conflicts.includes('DATABASE_URL_INVALID') ? 'DATABASE_URL_INVALID'
         : inspected.conflicts.includes('DATABASE_ADAPTER_INVALID') ? 'DATABASE_ADAPTER_INVALID'
           : 'DATABASE_CONFIGURATION_CONFLICT';
-    fail(code, code === 'DATABASE_NAME_MISMATCH' ? 'TiDB database must be osaahdaylightschool.' : 'Database configuration conflicts with the TiDB-only runtime.');
+    const conflictDetails = inspected.conflicts.join(', ');
+    fail(code, code === 'DATABASE_NAME_MISMATCH' ? 'TiDB database must be osaahdaylightschool.' : `Database configuration conflicts with the TiDB-only runtime (${conflictDetails}).`);
   }
   const selection = String(environment.OSAAH_DATABASE_ADAPTER ?? '').trim().toLowerCase();
   const postgresUrl = [environment.OSAAH_POSTGRES_URL, environment.POSTGRES_URL].find((value) => typeof value === 'string' && value.trim())?.trim() ?? '';
