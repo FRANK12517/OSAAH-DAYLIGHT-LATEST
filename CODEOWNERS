@@ -6,6 +6,20 @@
 /scripts/verify-login-assets.mjs @FRANK12517
 /.github/workflows/login-assets-integrity.yml @FRANK12517
 
+# Authentication behavior and its regression gate require maintainer review.
+/public/app.js @FRANK12517
+/src/auth.js @FRANK12517
+/src/roles.js @FRANK12517
+/src/server.mjs @FRANK12517
+/test/auth-*.test.js @FRANK12517
+/test/combined-role-auth-session-isolation.test.js @FRANK12517
+/test/durable-auth-sessions.test.js @FRANK12517
+/test/serverless-auth-session.test.js @FRANK12517
+/.github/workflows/protected-components.yml @FRANK12517
+/.github/workflows/production-auth-smoke.yml @FRANK12517
+/docs/authentication-regression-protection.md @FRANK12517
+/package.json @FRANK12517
+
 # Admission workflow code, contracts, and protection gates require maintainer review.
 /public/admissions.html @FRANK12517
 /public/admissions-workflow.js @FRANK12517

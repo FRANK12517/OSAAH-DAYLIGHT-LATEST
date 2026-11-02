@@ -8,6 +8,7 @@
     "assets:verify": "node scripts/verify-login-assets.mjs",
     "start": "node src/server.mjs",
     "test": "node --test",
+    "test:auth-regression": "node --test --test-concurrency=1 test/auth-login-json.test.js test/auth-login-frontend-contract.test.js test/auth-request-token-extraction.test.js test/auth-session-diagnostics.test.js test/auth-database-health.test.js test/authentication-database-health.test.js test/combined-role-auth-session-isolation.test.js test/durable-auth-sessions.test.js test/serverless-auth-session.test.js test/database-runtime-auth-failure.test.js test/all-role-routing.test.js test/parent-phone-login.test.js test/proprietor-authentication.test.js test/staff-authentication-part3.test.js",
     "test:fee-hub": "node --test test/fee-hub-regression.test.js test/fee-setup-part4.test.js test/fee-collections-repository.test.js test/parent-fee-obligations-repository.test.js test/receive-payment-fee-types-consistency.test.js",
     "test:staff-attendance": "node --test test/staff-attendance-*.test.js test/staff-leave-reconciliation-part3.test.js",
     "migration:status": "node scripts/migrate.mjs status",

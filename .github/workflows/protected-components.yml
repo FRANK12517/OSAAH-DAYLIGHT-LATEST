@@ -17,8 +17,12 @@ jobs:
       - name: Install Chromium for Staff Attendance responsive safeguard
         run: npx playwright install --with-deps chromium
       - run: npm run protection:verify
-      - name: Authentication session diagnostics regression suite
-        run: node --test test/serverless-auth-session.test.js test/auth-session-diagnostics.test.js
+      - name: Authentication API, role, session, and routing regression suite
+        run: npm run test:auth-regression
+      - name: Synthetic authentication browser matrix
+        env:
+          OSAAH_RUN_LOCAL_AUTH_BROWSER_TESTS: '1'
+        run: node --test --test-concurrency=1 test/staff-role-auth-browser.test.js
       - name: Fee Hub preservation regression suite
         run: npm run test:fee-hub
       - name: Attendance integrity regression suite

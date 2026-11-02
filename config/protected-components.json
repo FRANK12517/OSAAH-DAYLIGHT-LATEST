@@ -397,6 +397,110 @@
       ]
     },
     {
+      "id": "school-authentication-login-contract",
+      "description": "Protected login response handling, server-resolved identity and roles, durable sessions, logout, and role-specific dashboard routing.",
+      "route": "/",
+      "files": [
+        {
+          "path": "public/app.js",
+          "requiredMarkers": [
+            "async function readApiJson(response, label = 'The server')",
+            "response.headers.get('content-type')",
+            "await readApiJson(response, 'Sign-in service')",
+            "if (!response.ok || result.error ||",
+            "await renderDashboard(result.user, result.redirectTo)"
+          ]
+        },
+        {
+          "path": "src/auth.js",
+          "requiredMarkers": [
+            "SCHOOL_PORTAL_DASHBOARDS",
+            "async function loginFromDatabase",
+            "async function authenticateAsync",
+            "async function logoutSession",
+            "createDurableSessionResult"
+          ]
+        },
+        {
+          "path": "src/server.mjs",
+          "requiredMarkers": [
+            "pathname === '/api/auth/login' && request.method === 'POST'",
+            "async function login(request, response, auth, audit)",
+            "'Content-Type': 'application/json; charset=utf-8'",
+            "pathname === '/api/auth/session' && request.method === 'GET'"
+          ]
+        },
+        {
+          "path": "test/auth-login-json.test.js",
+          "requiredMarkers": [
+            "login returns JSON with an explicit content type for invalid request bodies",
+            "login returns a safe JSON error when authentication throws"
+          ]
+        },
+        {
+          "path": "test/auth-login-frontend-contract.test.js",
+          "requiredMarkers": [
+            "login response parser accepts JSON responses",
+            "login response parser rejects HTML, plain text, and empty responses with a safe message",
+            "login response parser masks malformed and empty JSON errors",
+            "login submits a dashboard only after a successful response with a user"
+          ]
+        },
+        {
+          "path": "test/combined-role-auth-session-isolation.test.js",
+          "requiredMarkers": [
+            "synthetic Parent plus six staff logins keep identities, roles, routes, and logout isolated"
+          ]
+        },
+        {
+          "path": "test/staff-role-auth-browser.test.js",
+          "requiredMarkers": [
+            "teacher-username",
+            "teacher-email",
+            "verify session restoration after refresh",
+            "verify logout"
+          ]
+        },
+        {
+          "path": "package.json",
+          "requiredMarkers": [
+            "test:auth-regression"
+          ]
+        },
+        {
+          "path": ".github/workflows/protected-components.yml",
+          "requiredMarkers": [
+            "Authentication API, role, session, and routing regression suite",
+            "Synthetic authentication browser matrix"
+          ]
+        },
+        {
+          "path": ".github/workflows/production-auth-smoke.yml",
+          "requiredMarkers": [
+            "workflow_dispatch:",
+            "environment: production",
+            "test/production-auth-smoke.test.js"
+          ]
+        },
+        {
+          "path": "test/production-auth-smoke.test.js",
+          "requiredMarkers": [
+            "production staff accounts authenticate, restore sessions, enforce roles, and log out",
+            "Remaining accounts were not attempted.",
+            "Teacher username and email identifiers did not resolve to the same account."
+          ]
+        },
+        {
+          "path": "docs/authentication-regression-protection.md",
+          "requiredMarkers": [
+            "Authentication regression contract",
+            "Production authentication smoke test",
+            "No production root cause is asserted"
+          ]
+        }
+      ]
+    },
+    {
       "id": "temporary-auth-session-diagnostics",
       "description": "Opt-in, redacted production session restoration trace and token-hash-scoped read-only classification.",
       "route": "/api/auth/session",
@@ -437,8 +541,8 @@
         {
           "path": ".github/workflows/protected-components.yml",
           "requiredMarkers": [
-            "Authentication session diagnostics regression suite",
-            "test/auth-session-diagnostics.test.js"
+            "Authentication API, role, session, and routing regression suite",
+            "npm run test:auth-regression"
           ]
         }
       ]

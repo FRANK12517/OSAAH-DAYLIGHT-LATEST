@@ -1,14 +1,14 @@
 # Authentication regression protection
 
-## Authentication contract
+## Authentication regression contract
 
-School portal login is handled by `POST /api/auth/login`. The server normalizes the identifier, verifies the password against the configured persistence adapter, checks account eligibility, resolves the canonical role and permissions server side, and issues the `osaah_session` cookie. The cookie is HTTP-only and uses `SameSite=Lax`; production responses include `Secure`. Session records use durable storage when the configured adapter supports it. `GET /api/auth/session` restores the authenticated user and server-selected destination. `POST /api/auth/logout` revokes the session and clears the cookie.
+The browser submits school credentials as JSON to `POST /api/auth/login`. Login success requires an HTTP success response, a JSON response with a user, the server-issued `osaah_session` cookie, and the server-selected route. Non-JSON and malformed JSON responses produce a safe sign-in error. A response body alone never authenticates a user. The server normalizes the identifier, verifies the password against the configured persistence adapter, checks account eligibility, resolves the canonical role and permissions server side, and issues the `osaah_session` cookie. The cookie is HTTP-only and uses `SameSite=Lax`; production responses include `Secure`. Session records use durable storage when the configured adapter supports it. `GET /api/auth/session` restores the authenticated user and server-selected destination. `POST /api/auth/logout` revokes the session and clears the cookie.
 
 Role keys and landing routes are defined by `SCHOOL_PORTAL_DASHBOARDS` in `src/auth.js`:
 
 | Role key | Destination |
 | --- | --- |
-| `PROPRIETOR` | `/reports` |
+| `PROPRIETOR` | `/` |
 | `SCHOOL_ADMIN` | `/settings` |
 | `HEADTEACHER` | `/academics` |
 | `ASSISTANT_HEADTEACHER` | `/academics` |
@@ -19,10 +19,10 @@ The application uses the existing single-school identity. Protected APIs must au
 
 ## Local verification
 
-Run the focused authentication and proprietor browser suite with:
+Run the focused authentication API, frontend response, session, and role-routing suite with:
 
 ```sh
-OSAAH_RUN_LOCAL_AUTH_BROWSER_TESTS=1 npm run test:auth-regression
+npm run test:auth-regression
 ```
 
 Run the isolated Playwright staff role matrix with generated synthetic users and credentials using:
@@ -36,12 +36,14 @@ On Windows PowerShell, set the environment variable with `$env:OSAAH_RUN_LOCAL_A
 
 ## Production smoke tests
 
-Production credential checks are manual and opt-in. Do not put production credentials in source, command-line arguments, test output, CI variables available to ordinary pull requests, screenshots, or artifacts. Use an approved secret store and an isolated browser context for each account. A production run must verify the session endpoint's server-resolved role, the role's expected route, dashboard content, refresh persistence, a permitted protected API, a denied cross-role API, and logout revocation. Do not create users, reset credentials, change roles, or modify school data to make a check pass. Record only role, identifier type, result category, HTTP status, route, and sanitized diagnostics.
+The `Production authentication smoke test` workflow is manual (`workflow_dispatch`) and uses the protected GitHub `production` environment. It requires production identifiers and passwords to be configured as environment secrets. It uses a fresh browser context per role, verifies the server-resolved user and role through `/api/auth/session`, secure session-cookie attributes, the role route and sidebar data, a protected cross-role API, refresh persistence, and logout. The workflow stops at the first failing account to avoid repeated attempts. It performs no school-record writes. Do not put production credentials in source, command-line arguments, test output, screenshots, artifacts, or secrets available to ordinary pull requests.
+
+Configure these environment secrets before dispatch: `PROD_PROPRIETOR_IDENTIFIER`, `PROD_PROPRIETOR_PASSWORD`, `PROD_ADMINISTRATOR_IDENTIFIER`, `PROD_ADMINISTRATOR_PASSWORD`, `PROD_HEADTEACHER_IDENTIFIER`, `PROD_HEADTEACHER_PASSWORD`, `PROD_ASSISTANT_HEADTEACHER_IDENTIFIER`, `PROD_ASSISTANT_HEADTEACHER_PASSWORD`, `PROD_ACCOUNTANT_IDENTIFIER`, `PROD_ACCOUNTANT_PASSWORD`, `PROD_TEACHER_USERNAME`, `PROD_TEACHER_EMAIL`, and `PROD_TEACHER_PASSWORD`.
+
+No production root cause is asserted by this repository contract. The local frontend previously parsed login responses without checking the content type. The local `/api/auth/login` handler already catches authentication errors and returns JSON; identifying a production proxy, deployment, database, or configuration failure requires live response and deployment evidence. Record only role, identifier type, result category, HTTP status, route, and sanitized diagnostics.
 
 For an approved, time-limited production session investigation, set `OSAAH_AUTH_SESSION_DIAGNOSTICS=1` in the protected Production environment and release the diagnostic build through the normal reviewed deployment process. The server logs cookie attributes without the cookie value, HMAC key configuration fingerprint, process/request/deployment correlation, a fingerprint of the configured database target, credential parsing result, signature outcome, token and session-ID fingerprints, durable-store lookup outcome, record-state classification, restored role category, and authorization result. Fingerprints are truncated SHA-256 digests and cannot be used as session credentials. The record classification query is read-only and is restricted to the hash of the presented session token. Do not enable broad request/body logging. Remove the diagnostic environment flag after the controlled test and retain only the sanitized report in access-controlled logs.
 
-Do not add production credential smoke tests to routine deployment triggers. This repository's current synthetic browser matrix is the CI safeguard; its credentials are generated per run and never persisted.
-
 ## CI release gate
 
-The `Verify protected components` workflow runs the authentication unit, durable session, role-routing, and Playwright browser regressions on pull requests and pushes to `main`. A failed assertion fails the workflow. The browser matrix requires Chromium, installed by the workflow. Repository branch protection should require the `Verify attendance integrity and protected components` job before merge; required status-check configuration is managed in GitHub repository settings and is not defined by workflow YAML.
+The `Verify protected components` workflow runs `npm run test:auth-regression` and the Playwright synthetic staff-role matrix on pull requests and pushes to `main`. It installs Chromium before running browser regressions. A failed assertion fails the workflow. Repository branch protection must require the `Verify attendance integrity and protected components` job before merge; GitHub repository settings control that requirement and it cannot be established by workflow YAML alone.

@@ -1,0 +1,48 @@
+name: Production authentication smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-authentication-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/main'
+    name: Read-only production login smoke test
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    env:
+      OSAAH_RUN_PRODUCTION_AUTH_SMOKE_TESTS: '1'
+      PROD_PROPRIETOR_IDENTIFIER: ${{ secrets.PROD_PROPRIETOR_IDENTIFIER }}
+      PROD_PROPRIETOR_PASSWORD: ${{ secrets.PROD_PROPRIETOR_PASSWORD }}
+      PROD_ADMINISTRATOR_IDENTIFIER: ${{ secrets.PROD_ADMINISTRATOR_IDENTIFIER }}
+      PROD_ADMINISTRATOR_PASSWORD: ${{ secrets.PROD_ADMINISTRATOR_PASSWORD }}
+      PROD_HEADTEACHER_IDENTIFIER: ${{ secrets.PROD_HEADTEACHER_IDENTIFIER }}
+      PROD_HEADTEACHER_PASSWORD: ${{ secrets.PROD_HEADTEACHER_PASSWORD }}
+      PROD_ASSISTANT_HEADTEACHER_IDENTIFIER: ${{ secrets.PROD_ASSISTANT_HEADTEACHER_IDENTIFIER }}
+      PROD_ASSISTANT_HEADTEACHER_PASSWORD: ${{ secrets.PROD_ASSISTANT_HEADTEACHER_PASSWORD }}
+      PROD_ACCOUNTANT_IDENTIFIER: ${{ secrets.PROD_ACCOUNTANT_IDENTIFIER }}
+      PROD_ACCOUNTANT_PASSWORD: ${{ secrets.PROD_ACCOUNTANT_PASSWORD }}
+      PROD_TEACHER_USERNAME: ${{ secrets.PROD_TEACHER_USERNAME }}
+      PROD_TEACHER_EMAIL: ${{ secrets.PROD_TEACHER_EMAIL }}
+      PROD_TEACHER_PASSWORD: ${{ secrets.PROD_TEACHER_PASSWORD }}
+    steps:
+      - name: Check out the selected main commit
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run read-only role login smoke test
+        run: node --test --test-concurrency=1 test/production-auth-smoke.test.js
