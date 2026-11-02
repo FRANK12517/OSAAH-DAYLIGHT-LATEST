@@ -19,6 +19,17 @@ function mountDashboardOverview(dashboard) {
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
 const REQUEST_TIMEOUT_MS = 30000;
 async function fetchWithTimeout(resource, options = {}, label = 'The request') { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS); try { return await fetch(resource, { ...options, signal: controller.signal }); } catch (error) { if (error?.name === 'AbortError') throw new Error(`${label} timed out. Check your connection and try again.`); throw new Error(`${label} failed. Check your connection and try again.`); } finally { clearTimeout(timer); } }
+async function readApiJson(response, label = 'The server') {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!/\bapplication\/(?:[a-z0-9.-]+\+)?json\b/i.test(contentType)) {
+    throw new Error(`${label} returned an unexpected response. Please try again later.`);
+  }
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`${label} returned an invalid response. Please try again later.`);
+  }
+}
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 const RETRY_KEY = 'osaah_retry_queue_v1';
 function queuedRequests() { try { return JSON.parse(localStorage.getItem(RETRY_KEY) ?? '[]'); } catch { return []; } }
@@ -108,7 +119,7 @@ form.addEventListener('submit', async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     }, 'Sign-in');
-    const result = await response.json();
+    const result = await readApiJson(response, 'Sign-in service');
     if (!response.ok || result.error || (isParent ? Boolean(parentChallengeId) && !result.user : !result.user)) throw new Error(result.error || (isParent ? 'Parent sign-in could not be completed.' : 'Incorrect username or password.'));
     if (isParent && !parentChallengeId) {
       parentChallengeId = result.challengeId;
@@ -130,7 +141,7 @@ parentResend.addEventListener('click', async () => {
   parentResend.disabled = true;
   try {
     const response = await fetchWithTimeout('/api/auth/parent/request-code', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: form.elements.phone?.value ?? '' }) }, 'Code request');
-    const result = await response.json();
+    const result = await readApiJson(response, 'Sign-in service');
     if (!response.ok || !result.challengeId) throw new Error(result.error || 'Parent sign-in is temporarily unavailable.');
     parentChallengeId = result.challengeId; parentCodeInput.value = '';
     document.querySelector('#login-error').textContent = result.message || 'If the number is eligible, a verification code may arrive shortly.';
