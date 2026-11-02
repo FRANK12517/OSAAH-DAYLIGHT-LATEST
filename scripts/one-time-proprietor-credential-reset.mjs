@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { scryptSync } from 'node:crypto';
 import mysql from 'mysql2/promise';
 

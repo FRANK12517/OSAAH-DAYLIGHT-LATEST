@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { admissionYearFor } from './permanent-student-id.js';
 import { requireStudentGender } from './student-gender.js';
 import { canonicalClassId } from './student-classes.js';

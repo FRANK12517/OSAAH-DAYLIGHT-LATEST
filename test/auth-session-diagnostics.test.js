@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer, request as httpRequest } from 'node:http';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { createAuthService } from '../src/auth.js';
 import { createApp } from '../src/server.mjs';
 

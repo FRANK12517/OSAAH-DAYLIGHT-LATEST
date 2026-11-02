@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const INVALID_CREDENTIALS = Object.freeze({ error: 'Invalid credentials.' });
 
