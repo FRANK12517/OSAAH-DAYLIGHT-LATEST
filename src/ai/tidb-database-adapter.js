@@ -157,7 +157,7 @@ export function createDatabaseAdapter({ environment, poolFactory = mysql.createP
     port,
     ssl: {
       minVersion: 'TLSv1.2',
-      rejectUnauthorized: true,
+      rejectUnauthorized: env.TIDB_SSL_REJECT_UNAUTHORIZED === 'false' ? false : true,
       ...(ca ? { ca } : {})
     },
     waitForConnections: true,
@@ -267,3 +267,4 @@ export function createDatabaseAdapter({ environment, poolFactory = mysql.createP
 
 export { schemaMigrationDdl, schemaMigrationLockDdl, schemaBaselineDdl, schemaMigrationRunsDdl, splitMigrationSql, executeMigrationSqlOn };
 export default createDatabaseAdapter;
+

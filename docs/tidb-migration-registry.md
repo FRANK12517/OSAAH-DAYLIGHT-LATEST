@@ -93,3 +93,4 @@ Repository directory: `schema/` (82 numbered migrations). This registry classifi
 - MySQL-compatible syntax is not sufficient proof of TiDB compatibility; server version, data-dependent preconditions, and actual schema state still matter.
 - Migration order follows numeric filename versions. Missing numbers are not assumed to be errors.
 - Supabase migration files live separately under `supabase/migrations/` and are historical/non-runtime for the TiDB deployment; they are not executed by this registry.
+
