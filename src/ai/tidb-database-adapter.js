@@ -134,11 +134,11 @@ export function createDatabaseAdapter({ environment, poolFactory = mysql.createP
     catch { throw Object.assign(new Error('DATABASE_URL contains invalid URL encoding.'), { code: 'DATABASE_URL_INVALID' }); }
   };
   const firstValue = (...values) => values.find((value) => typeof value === 'string' && value.trim())?.trim();
-  const host = firstValue(env.HOST, env.TIDB_HOST, url?.hostname);
+  const host = firstValue(env.TIDB_HOST, url?.hostname, connectionString ? undefined : env.HOST);
   const user = firstValue(env.TIDB_USER, url?.username ? decode(url.username) : undefined);
   const password = firstValue(env.TIDB_PASSWORD, url?.password ? decode(url.password) : undefined);
-  const database = firstValue(env.DATABASE, env.TIDB_DATABASE, url?.pathname ? decode(url.pathname.slice(1)) : undefined);
-  const portValue = firstValue(env.PORT, env.TIDB_PORT, url?.port);
+  const database = firstValue(env.TIDB_DATABASE, url?.pathname ? decode(url.pathname.slice(1)) : undefined, connectionString ? undefined : env.DATABASE);
+  const portValue = firstValue(env.TIDB_PORT, url?.port);
   const port = portValue ? Number(portValue) : 3306;
   if (!host || !user || !password || !database || !Number.isInteger(port) || port < 1 || port > 65535) {
     throw Object.assign(new Error('TiDB configuration requires a database URL or valid host, port, database, user, and password settings.'), { code: 'DATABASE_CONFIGURATION_INVALID' });
