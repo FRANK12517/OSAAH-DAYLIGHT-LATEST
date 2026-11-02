@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { createServer, request as httpRequest } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';

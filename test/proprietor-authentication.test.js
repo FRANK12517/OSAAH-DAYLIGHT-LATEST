@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { createServer, request as httpRequest } from 'node:http';
 import { createProprietorAuthenticationController } from '../src/proprietor-authentication-controller.js';
 import { createApp } from '../src/server.mjs';
