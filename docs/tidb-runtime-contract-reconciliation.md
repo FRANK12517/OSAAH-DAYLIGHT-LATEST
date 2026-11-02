@@ -321,3 +321,4 @@ The machine manifest stores each historical SELECT definition verbatim, source m
 - Investigate the 17 source-linked names without extracted SQL and review the 75 migration-only names before retiring any object.
 - Review the six fee reporting views against active supported workflows and disposition both historical class database views.
 - Test the generated-column migration and the canonical schema against an isolated TiDB instance in a later authorized phase.
+

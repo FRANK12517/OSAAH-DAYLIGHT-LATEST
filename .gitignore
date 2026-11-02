@@ -8,3 +8,6 @@ npm-debug.log*
 .env.local
 .vercel
 .env*
+
+.vercel
+.env*
