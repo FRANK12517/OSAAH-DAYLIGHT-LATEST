@@ -28,7 +28,9 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
   const sourcePairs = [
     ['HOST_SOURCES_DIFFER', environment.HOST, environment.TIDB_HOST, url?.hostname],
     ['DATABASE_SOURCES_DIFFER', environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
-    ['PORT_SOURCES_DIFFER', environment.PORT, environment.TIDB_PORT, url?.port]
+    // PORT belongs to the Vercel/HTTP runtime. Only compare the TiDB-specific
+    // override with the port embedded in DATABASE_URL.
+    ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, url?.port]
   ];
   for (const [code, ...values] of sourcePairs) {
     const configured = values.filter((value) => value !== undefined && value !== null && String(value).trim()).map(String);
@@ -56,7 +58,7 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
     conflicts: duplicateConflicts,
     warnings: [],
     tls: { enabled: true, minimumVersion: 'TLSv1.2', certificateVerification: true, customCaProvided: Boolean(environment.TIDB_CA_CERT?.trim()) },
-    configuredSources: { host: url?.hostname ? 'DATABASE_URL' : environment.HOST ? 'HOST' : environment.TIDB_HOST ? 'TIDB_HOST' : null, database: url?.pathname ? 'DATABASE_URL' : environment.DATABASE ? 'DATABASE' : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : null, port: url?.port ? 'DATABASE_URL' : environment.PORT ? 'PORT' : environment.TIDB_PORT ? 'TIDB_PORT' : null }
+    configuredSources: { host: url?.hostname ? 'DATABASE_URL' : environment.HOST ? 'HOST' : environment.TIDB_HOST ? 'TIDB_HOST' : null, database: url?.pathname ? 'DATABASE_URL' : environment.DATABASE ? 'DATABASE' : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : null, port: url?.port ? 'DATABASE_URL' : environment.TIDB_PORT ? 'TIDB_PORT' : null }
   };
 }
 function configuredDatabaseAdapterModule(environment) {
