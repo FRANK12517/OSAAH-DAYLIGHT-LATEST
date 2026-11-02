@@ -11,39 +11,57 @@ function parse(value, fallback = null) { if (value === null || value === undefin
 
 function postgresConnectionString(value) { return typeof value === 'string' && /^\s*postgres(?:ql)?:/i.test(value); }
 function mysqlConnectionString(value) { return typeof value === 'string' && /^\s*mysql(?:2)?:/i.test(value); }
+function configuredValue(...values) { return values.find((value) => typeof value === 'string' && value.trim())?.trim() ?? ''; }
+function splitTiDBConfiguration(environment) {
+  const values = {
+    host: configuredValue(environment.TIDB_HOST, environment.HOST),
+    port: configuredValue(environment.TIDB_PORT, environment.PORT),
+    database: configuredValue(environment.TIDB_DATABASE, environment.DATABASE),
+    user: configuredValue(environment.TIDB_USER, environment.Username, environment.USERNAME),
+    password: configuredValue(environment.TIDB_PASSWORD, environment.Password, environment.PASSWORD)
+  };
+  return { ...values, complete: Object.values(values).every(Boolean) };
+}
 export function inspectDatabaseConfiguration({ environment = process.env } = {}) {
-  const databaseUrl = typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
+  const split = splitTiDBConfiguration(environment);
+  const databaseUrl = split.complete ? '' : typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
   const postgresUrl = [environment.OSAAH_POSTGRES_URL, environment.POSTGRES_URL].some((value) => typeof value === 'string' && value.trim());
   const mysqlUrl = mysqlConnectionString(databaseUrl);
   let url;
   if (mysqlUrl) { try { url = new URL(databaseUrl); } catch { /* Report below without exposing input. */ } }
-  const databaseName = String(url?.pathname?.slice(1) ?? (databaseUrl ? '' : environment.TIDB_DATABASE ?? environment.DATABASE ?? '')).trim();
+  const databaseName = split.complete ? split.database : String(url?.pathname?.slice(1) ?? (databaseUrl ? '' : split.database)).trim();
   const missingSettings = [];
-  if (!databaseUrl && !(environment.HOST || environment.TIDB_HOST)) missingSettings.push('HOST');
-  if (!databaseUrl && !(environment.TIDB_USER)) missingSettings.push('TIDB_USER');
-  if (!databaseUrl && !(environment.TIDB_PASSWORD)) missingSettings.push('TIDB_PASSWORD');
+  if (!databaseUrl && !split.complete && !split.host) missingSettings.push('HOST');
+  if (!databaseUrl && !split.complete && !split.user) missingSettings.push('TIDB_USER');
+  if (!databaseUrl && !split.complete && !split.password) missingSettings.push('TIDB_PASSWORD');
   if (!databaseUrl && !databaseName) missingSettings.push('DATABASE');
   const conflicts = [];
   if (postgresUrl || postgresConnectionString(databaseUrl)) conflicts.push('DATABASE_CONFIGURATION_CONFLICT');
-  const sourcePairs = [
-    ['HOST_SOURCES_DIFFER', databaseUrl ? undefined : environment.HOST, environment.TIDB_HOST, url?.hostname],
-    ['DATABASE_SOURCES_DIFFER', databaseUrl ? undefined : environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
-    // PORT belongs to the Vercel/HTTP runtime. Only compare the TiDB-specific
-    // override with the port embedded in DATABASE_URL.
-    ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, url?.port]
-  ];
+  const sourcePairs = split.complete
+    ? [
+      ['HOST_SOURCES_DIFFER', environment.TIDB_HOST, environment.HOST],
+      ['DATABASE_SOURCES_DIFFER', environment.TIDB_DATABASE, environment.DATABASE],
+      ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, environment.PORT],
+      ['USERNAME_SOURCES_DIFFER', environment.TIDB_USER, environment.Username ?? environment.USERNAME],
+      ['PASSWORD_SOURCES_DIFFER', environment.TIDB_PASSWORD, environment.Password ?? environment.PASSWORD]
+    ]
+    : [
+      ['HOST_SOURCES_DIFFER', databaseUrl ? undefined : environment.HOST, environment.TIDB_HOST, url?.hostname],
+      ['DATABASE_SOURCES_DIFFER', databaseUrl ? undefined : environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
+      ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, url?.port]
+    ];
   for (const [code, ...values] of sourcePairs) {
     const configured = values.filter((value) => value !== undefined && value !== null && String(value).trim()).map(String);
     if (new Set(configured).size > 1) conflicts.push(code);
   }
-  if (environment.TIDB_USER && url?.username && String(environment.TIDB_USER) !== decodeURIComponent(url.username)) conflicts.push('USERNAME_SOURCES_DIFFER');
-  if (environment.TIDB_PASSWORD && url?.password && String(environment.TIDB_PASSWORD) !== decodeURIComponent(url.password)) conflicts.push('PASSWORD_SOURCES_DIFFER');
+  if (!split.complete && environment.TIDB_USER && url?.username && String(environment.TIDB_USER) !== decodeURIComponent(url.username)) conflicts.push('USERNAME_SOURCES_DIFFER');
+  if (!split.complete && environment.TIDB_PASSWORD && url?.password && String(environment.TIDB_PASSWORD) !== decodeURIComponent(url.password)) conflicts.push('PASSWORD_SOURCES_DIFFER');
   if (environment.OSAAH_DATABASE_ADAPTER && String(environment.OSAAH_DATABASE_ADAPTER).trim().toLowerCase() !== 'tidb') conflicts.push('DATABASE_ADAPTER_INVALID');
   if (databaseUrl && !mysqlUrl) conflicts.push('DATABASE_URL_INVALID');
   if (databaseUrl && mysqlUrl && !url) conflicts.push('DATABASE_URL_INVALID');
   if (databaseName && databaseName !== 'osaahdaylightschool') conflicts.push('DATABASE_NAME_MISMATCH');
-  if (databaseUrl && url && !url.username) missingSettings.push('TIDB_USER');
-  if (databaseUrl && url && !url.password) missingSettings.push('TIDB_PASSWORD');
+  if (databaseUrl && url && !url.username && !split.user) missingSettings.push('TIDB_USER');
+  if (databaseUrl && url && !url.password && !split.password) missingSettings.push('TIDB_PASSWORD');
   const duplicateConflicts = [...new Set(conflicts)];
   const valid = !missingSettings.length && !duplicateConflicts.length;
   return {
@@ -58,7 +76,7 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
     conflicts: duplicateConflicts,
     warnings: [],
     tls: { enabled: true, minimumVersion: 'TLSv1.2', certificateVerification: true, customCaProvided: Boolean(environment.TIDB_CA_CERT?.trim()) },
-    configuredSources: { host: url?.hostname ? 'DATABASE_URL' : environment.HOST ? 'HOST' : environment.TIDB_HOST ? 'TIDB_HOST' : null, database: url?.pathname ? 'DATABASE_URL' : environment.DATABASE ? 'DATABASE' : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : null, port: url?.port ? 'DATABASE_URL' : environment.TIDB_PORT ? 'TIDB_PORT' : null }
+    configuredSources: { host: split.complete ? (environment.TIDB_HOST ? 'TIDB_HOST' : 'HOST') : url?.hostname ? 'DATABASE_URL' : environment.HOST ? 'HOST' : environment.TIDB_HOST ? 'TIDB_HOST' : null, database: split.complete ? (environment.TIDB_DATABASE ? 'TIDB_DATABASE' : 'DATABASE') : url?.pathname ? 'DATABASE_URL' : environment.DATABASE ? 'DATABASE' : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : null, port: split.complete ? (environment.TIDB_PORT ? 'TIDB_PORT' : 'PORT') : url?.port ? 'DATABASE_URL' : environment.TIDB_PORT ? 'TIDB_PORT' : null }
   };
 }
 function configuredDatabaseAdapterModule(environment) {
@@ -73,13 +91,14 @@ function configuredDatabaseAdapterModule(environment) {
   }
   const selection = String(environment.OSAAH_DATABASE_ADAPTER ?? '').trim().toLowerCase();
   const postgresUrl = [environment.OSAAH_POSTGRES_URL, environment.POSTGRES_URL].find((value) => typeof value === 'string' && value.trim())?.trim() ?? '';
-  const databaseUrl = typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
+  const split = splitTiDBConfiguration(environment);
+  const databaseUrl = split.complete ? '' : typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
   const postgresDatabaseUrl = postgresConnectionString(databaseUrl);
   const mysqlDatabaseUrl = mysqlConnectionString(databaseUrl);
   if (selection && selection !== 'tidb') fail('DATABASE_ADAPTER_INVALID', 'OSAAH_DATABASE_ADAPTER must be tidb.');
   if (postgresDatabaseUrl || postgresUrl) fail('DATABASE_CONFIGURATION_CONFLICT', 'PostgreSQL database configuration is not supported.');
   if (databaseUrl && !mysqlDatabaseUrl) fail('DATABASE_URL_INVALID', 'DATABASE_URL must use mysql:// or mysql2://.');
-  if (!databaseUrl) return null;
+  if (!databaseUrl && !split.complete) return null;
   return fileURLToPath(new URL('./tidb-database-adapter.js', import.meta.url));
 }
 
