@@ -116,7 +116,14 @@ test('synthetic local staff browser matrix verifies redirects, sessions, RBAC, a
         const roleLandmark = `${flow.roleKey.replaceAll('_', ' ')} · SCHOOL PORTAL`;
         await page.locator('.workspace .topbar .eyebrow').filter({ hasText: roleLandmark }).waitFor();
         stage = 'open the first visible role-specific sidebar module';
-        const childLink = page.locator('.sidebar-link:not([data-module="dashboard"]):not([data-module="logout"])').first();
+        const roleModuleLinks = page.locator('.sidebar-link:not([data-module="dashboard"]):not([data-module="logout"])');
+        let childLink = roleModuleLinks.filter({ visible: true }).first();
+        if (await childLink.count() === 0) {
+          const firstGroupToggle = page.locator('.sidebar-group-toggle').first();
+          if (await firstGroupToggle.count()) await firstGroupToggle.click();
+          childLink = roleModuleLinks.filter({ visible: true }).first();
+        }
+        await childLink.waitFor({ state: 'visible' });
         const moduleContract = await childLink.evaluate((link) => ({
           name: link.dataset.moduleName,
           route: link.dataset.moduleRoute,
@@ -169,6 +176,7 @@ test('synthetic local staff browser matrix verifies redirects, sessions, RBAC, a
         assert.ok(network.some((event) => event.path === '/api/administrators' && event.status === adminAccess));
         subtest.diagnostic(JSON.stringify({ route: flow.route, role: flow.roleKey, adminApiStatus: adminAccess, sanitizedNetwork: network, consoleErrorCount, pageErrorCount }));
       } catch (error) {
+        subtest.diagnostic(JSON.stringify({ role: flow.roleKey, stage, error: error.message, sanitizedNetwork: network }));
         throw new Error(`Synthetic ${flow.roleKey} browser flow failed while attempting to ${stage}.`, { cause: error });
       } finally {
         await context.close();
