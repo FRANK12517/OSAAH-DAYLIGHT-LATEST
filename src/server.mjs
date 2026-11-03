@@ -9,6 +9,7 @@ import { SIDEBAR_MODULES, parentDashboardModules, sidebarHealth, visibleSidebar 
 import { canAccess, canonicalRoleKey, createAuthService } from './auth.js';
 import { createUserDirectoryService } from './user-directory.js';
 import { createRoleProvisioningDiagnostic } from './role-provisioning-diagnostic.js';
+import { createDurableRoleAccountProvisioning } from './durable-role-account-provisioning.js';
 import { createAuditLog } from './audit.js';
 import { CORE_LEVELS, createStudentService } from './students.js';
 import { canonicalClassId } from './student-classes.js';
@@ -137,6 +138,9 @@ export function createApp({ auth = null, parentSmsAuth = null, students = null, 
   schoolSettings ??= createSchoolSettingsService({ database, schoolProfile: branding });
   const userDirectory = createUserDirectoryService({ database, canonicalSchoolId: serviceSchoolId });
   const roleProvisioningDiagnostic = createRoleProvisioningDiagnostic({ database });
+  const durableRoleAccountProvisioning = database?.query && database?.transaction && database?.execute && auth?.hashPassword && auth?.loginFromDatabase && auth?.logoutSession
+    ? createDurableRoleAccountProvisioning({ database, passwordHash: auth.hashPassword, verifyLogin: auth.loginFromDatabase, revokeSession: auth.logoutSession })
+    : null;
   attendance ??= createAttendanceService({ requireReasons: true, schoolId: serviceSchoolId });
   fees ??= createFeeService({ schoolId: serviceSchoolId });
   feeTypes ??= createFeeTypeRegistry({ schoolId: serviceSchoolId });
@@ -482,6 +486,25 @@ export function createApp({ auth = null, parentSmsAuth = null, students = null, 
           return json(response, { accounts }, 200);
         } catch {
           return json(response, { error: 'Role provisioning diagnostic is unavailable.', code: 'DIAGNOSTIC_UNAVAILABLE' }, 503);
+        }
+      }
+      if (pathname === '/api/admin/provision-role-accounts') {
+        if (request.method !== 'POST') return json(response, { error: 'Method not allowed.' }, 405);
+        if (!user) return json(response, { error: 'UNAUTHENTICATED' }, 401);
+        if (user.portal !== 'school' || user.roleKey !== 'PROPRIETOR') return json(response, { error: 'Forbidden.' }, 403);
+        const origin = String(request.headers.origin ?? '');
+        let sameOrigin = false;
+        try { sameOrigin = Boolean(origin && request.headers.host && new URL(origin).host.toLowerCase() === String(request.headers.host).toLowerCase()); } catch {}
+        if (!sameOrigin) return json(response, { error: 'Same-origin request required.' }, 403);
+        if (!durableRoleAccountProvisioning) return json(response, { error: 'Durable role provisioning is unavailable.', code: 'PERSISTENCE_UNAVAILABLE' }, 503);
+        try {
+          const accounts = await durableRoleAccountProvisioning.provision(user.schoolId);
+          audit(createAuditLog({ schoolId: user.schoolId, userId: user.id, roleId: user.roleKey, action: 'ROLE_ACCOUNTS_PROVISIONED', entity: 'RoleAccountProvisioning', newValue: { accountCount: accounts.length, roleKeys: accounts.map((account) => account.role) } }));
+          return json(response, { accounts, credentialsShownOnce: true }, 200);
+        } catch (error) {
+          const code = /^[A-Z0-9_]+$/.test(String(error?.code ?? '')) ? error.code : 'ROLE_ACCOUNT_PROVISIONING_FAILED';
+          if (error?.committed) audit(createAuditLog({ schoolId: user.schoolId, userId: user.id, roleId: user.roleKey, action: 'ROLE_ACCOUNTS_PROVISIONED_VERIFICATION_FAILED', entity: 'RoleAccountProvisioning', newValue: { role: error?.details?.role ?? null, code } }));
+          return json(response, { error: error?.message ?? 'Role account provisioning failed safely.', code, ...(error?.details ? { details: error.details } : {}) }, error?.status ?? 409);
         }
       }
       if (pathname === '/api/fees/obligations/publish' && request.method === 'POST') { if (!user) return json(response,{error:'UNAUTHENTICATED'},401); if (!feeCollections) return json(response,{error:'PERSISTENCE_UNAVAILABLE'},503); if (!canAccess(user,'fees.write')) return json(response,{error:'Forbidden.'},403); try { const body=await readJson(request); if (body.students || body.studentRows || body.studentIds) return json(response,{error:'Student lists are not accepted.'},400); const customFeeTypeName=String(body.customFeeTypeName??'').trim(); if (body.feeStructureId==='OTHER' && !customFeeTypeName) return json(response,{error:'Specify Fee Type is required when Other is selected.'},400); const input={scope:body.scope,feeStructureId:body.feeStructureId, classId:body.scope==='SPECIFIC_CLASS'?body.classId:null, academicYearId:body.academicYearId??body.academicYear, termId:body.termId??body.term, amountMinor:body.amountMinor, customFeeTypeName:customFeeTypeName||null}; if (customFeeTypeName && database?.execute) { try { await database.execute('UPDATE fee_structures SET custom_fee_type_name=? WHERE id=? AND school_id=?',[customFeeTypeName,input.feeStructureId,user.schoolId]); } catch {} } const result=await feeCollections.publishFeeObligations(input, user); students.listStudents({ requestedSchoolId:user.schoolId }).filter((student)=>!input.classId||student.classId===input.classId).forEach((student)=>dispatchParentMessage({studentId:student.id,category:'FEE_PUBLISHED',title:'Fee published',body:'A fee of GHS '+(Number(input.amountMinor||0)/100).toFixed(2)+' has been published for '+[student.firstName,student.middleName,student.surname].filter(Boolean).join(' ')+', Permanent Student ID '+student.permanentStudentId+'.',idempotencyKey:'FEE_PUBLISHED:'+result.created_count+':'+student.permanentStudentId})); return json(response,{scope:body.scope,eligible_count:result.eligible_count,created_count:result.created_count,skipped_count:result.skipped_count,classId:input.classId??null,academicYear:input.academicYearId??null,term:input.termId??null,customFeeTypeName:customFeeTypeName||null}); } catch(error){ const safe=safeFeeError(error,400); return json(response,safe.body,safe.status); } }

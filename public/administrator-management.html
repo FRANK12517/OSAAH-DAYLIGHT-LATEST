@@ -13,6 +13,16 @@
     <h1>Administrator Management</h1>
     <p class="muted">Assign and manage School Administrators. Credentials are shown once after creation; use the administrator email as the username.</p>
 
+    <section class="card" aria-labelledby="role-provisioning-title">
+      <h2 id="role-provisioning-title">Reconcile Approved Role Accounts</h2>
+      <p class="muted">This proprietor-only action re-associates the five approved accounts with this school, assigns one target role each, creates or links durable staff records, activates the accounts, replaces their passwords with temporary credentials, and revokes their current sessions. It removes their previous role mappings. If an account has staff records at another school or a parent-student link, the complete operation stops without changes so those records are not orphaned.</p>
+      <p class="muted">Targets: School Admin, Headteacher, Assistant Headteacher, Accountant, and Teacher (frank.abban).</p>
+      <button id="role-provisioning-button" class="primary-button" type="button">Provision the five approved accounts</button>
+      <button id="role-diagnostic-button" class="text-button" type="button">Verify role and school mappings</button>
+      <p id="role-provisioning-result" class="muted" role="status" aria-live="polite"></p>
+      <div id="role-provisioning-output" class="responsive-table" aria-live="polite"></div>
+    </section>
+
     <section class="card">
       <h2>Assign School Administrator</h2>
       <form id="administrator-form" class="stack-form" novalidate>
@@ -73,7 +83,67 @@
     const resetForm = document.querySelector('#administrator-reset-form');
     const resetResult = document.querySelector('#administrator-reset-result');
     const rows = document.querySelector('#administrator-rows');
+    const provisionButton = document.querySelector('#role-provisioning-button');
+    const diagnosticButton = document.querySelector('#role-diagnostic-button');
+    const provisioningResult = document.querySelector('#role-provisioning-result');
+    const provisioningOutput = document.querySelector('#role-provisioning-output');
     const esc = (value) => String(value ?? '').replace(/[&<>\'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+
+    async function verifyRoleMappings() {
+      diagnosticButton.disabled = true;
+      provisioningResult.textContent = 'Checking approved role mappings…';
+      try {
+        const response = await fetch('/api/admin/verify-role-provisioning', { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? 'Role mapping check failed.');
+        const accounts = data.accounts ?? [];
+        provisioningOutput.innerHTML = `<table><thead><tr><th>Role</th><th>Account exists</th><th>School matched</th><th>Role matched</th><th>Active</th><th>Staff rows</th><th>Staff profiles</th></tr></thead><tbody>${accounts.map((item) => `<tr><td>${esc(item.role)}</td><td>${item.accountExists ? 'Yes' : 'No'}</td><td>${item.schoolMatched ? 'Yes' : 'No'}</td><td>${item.assignedRoleMatches ? 'Yes' : 'No'}</td><td>${item.active ? 'Yes' : 'No'}</td><td>${esc(item.staffRecordCount)}</td><td>${esc(item.staffProfileCount)}</td></tr>`).join('')}</tbody></table>`;
+        provisioningResult.textContent = `${accounts.filter((item) => item.schoolMatched && item.assignedRoleMatches && item.active && item.staffRecordCount > 0 && item.staffProfileCount > 0).length} of ${accounts.length} accounts have the requested Osaah role mapping and linked staff records.`;
+      } catch (error) {
+        provisioningResult.textContent = error.message ?? 'Role mapping check failed.';
+      } finally {
+        diagnosticButton.disabled = false;
+      }
+    }
+
+    diagnosticButton.addEventListener('click', verifyRoleMappings);
+    provisionButton.addEventListener('click', async () => {
+      const confirmed = window.confirm('Reconcile these five accounts into Osaah Daylight: administrator@osaah.edu.gh (School Admin), headteacher@osaah.edu.gh (Headteacher), assistantheadteacher@osaah.edu.gh (Assistant Headteacher), accountant@osaah.edu.gh (Accountant), and abbanfrank348@gmail.com (Teacher/frank.abban). This replaces their role mappings, activates them, creates or links staff records, sets generated temporary passwords, and revokes all current sessions. If any account has foreign-school staff records or parent-student links, the entire transaction stops without changing any account. Continue?');
+      if (!confirmed) return;
+      provisionButton.disabled = true;
+      provisioningResult.textContent = 'Provisioning the approved accounts…';
+      provisioningOutput.replaceChildren();
+      try {
+        const response = await fetch('/api/admin/provision-role-accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const data = await response.json();
+        if (!response.ok) {
+          const conflicts = (data.details?.roles ?? []).map((item) => `${item.role}: ${item.foreignStaffRecordCount} foreign staff record(s), ${item.foreignStaffProfileCount} foreign staff profile(s)`).join('; ');
+          provisioningResult.textContent = [data.error ?? 'Provisioning failed safely.', conflicts].filter(Boolean).join(' ');
+          return;
+        }
+        const accounts = data.accounts ?? [];
+        const table = document.createElement('table');
+        table.innerHTML = '<thead><tr><th>Role</th><th>Email</th><th>Username</th><th>Temporary password</th><th>Landing page</th></tr></thead><tbody></tbody>';
+        const body = table.querySelector('tbody');
+        for (const account of accounts) {
+          const row = document.createElement('tr');
+          for (const value of [account.role, account.email, account.username, account.temporaryPassword, account.landingPage]) {
+            const cell = document.createElement('td');
+            cell.textContent = String(value ?? '');
+            row.append(cell);
+          }
+          body.append(row);
+        }
+        provisioningOutput.replaceChildren(table);
+        provisioningResult.textContent = 'Provisioning and login verification succeeded. Temporary credentials are shown once; copy them to a secure password manager before leaving this page.';
+        provisionButton.textContent = 'Provisioning completed';
+        provisionButton.disabled = true;
+        await verifyRoleMappings();
+      } catch {
+        provisioningResult.textContent = 'Provisioning could not be confirmed. Verify role mappings before retrying.';
+        provisionButton.disabled = false;
+      }
+    });
 
     async function load() {
       const response = await fetch('/api/administrators');
