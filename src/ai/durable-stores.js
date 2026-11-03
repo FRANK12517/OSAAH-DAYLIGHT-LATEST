@@ -24,7 +24,9 @@ function splitTiDBConfiguration(environment) {
 }
 export function inspectDatabaseConfiguration({ environment = process.env } = {}) {
   const split = splitTiDBConfiguration(environment);
-  const databaseUrl = typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
+  // A complete split TiDB configuration is the documented primary source.
+  // Ignore an old DATABASE_URL in that case; it is not used by the adapter.
+  const databaseUrl = split.complete ? '' : typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
   const postgresUrl = [environment.OSAAH_POSTGRES_URL, environment.POSTGRES_URL].some((value) => typeof value === 'string' && value.trim());
   const mysqlUrl = mysqlConnectionString(databaseUrl);
   let url;
