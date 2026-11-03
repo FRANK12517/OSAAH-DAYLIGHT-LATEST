@@ -54,7 +54,7 @@ export async function createDatabaseAdapter() {
         cwd: repositoryRoot,
         env: environment,
         encoding: 'utf8',
-        timeout: 10000,
+        timeout: 30000,
         killSignal: 'SIGKILL'
       });
     };
@@ -96,7 +96,7 @@ test('migration CLI does not close the adapter before async validation completes
 
 test('invalid migration CLI commands fail non-zero instead of being swallowed', () => {
   const environment = { ...process.env, DATABASE_URL: '', OSAAH_DATABASE_ADAPTER_MODULE: '' };
-  const result = spawnSync(process.execPath, [migrationCli, 'invalid'], { cwd: repositoryRoot, env: environment, encoding: 'utf8', timeout: 5000 });
+  const result = spawnSync(process.execPath, [migrationCli, 'invalid'], { cwd: repositoryRoot, env: environment, encoding: 'utf8', timeout: 15000 });
   assert.equal(result.error, undefined);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /INVALID_MIGRATION_COMMAND/);

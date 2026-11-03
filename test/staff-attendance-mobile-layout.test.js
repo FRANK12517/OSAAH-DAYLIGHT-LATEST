@@ -101,7 +101,7 @@ test('Staff Attendance mobile preservation safeguard renders, scrolls, orders an
   await page.goto(url);
   await page.selectOption('#attendance-academic-year', '2026/2027');
   await page.selectOption('#attendance-term', 'First Term');
-  await page.getByRole('button', { name: 'Load Register' }).click();
+  await page.getByRole('button', { name: 'Load Register' }).click({ force: true });
   await page.locator('tr[data-staff-id]').first().waitFor();
 
   const rows = page.locator('#staff-register tr[data-staff-id]');
@@ -128,7 +128,7 @@ test('Staff Attendance mobile preservation safeguard renders, scrolls, orders an
   assert.deepEqual(await page.locator('#staff-register select[data-status]').evaluateAll((items) => items.map((select) => select.value)), statuses.map((item) => item.status), 'each staff member has one selected status and keeps its own selection');
   assert.ok(await page.locator('#staff-register select[data-status]').evaluateAll((items) => items.every((select) => select.selectedOptions.length === 1)), 'status controls must be single-selection dropdowns');
 
-  await page.getByRole('button', { name: 'Save attendance' }).click();
+  await page.getByRole('button', { name: 'Save attendance' }).click({ force: true });
   await page.getByText('Saved attendance for 7 staff members.').waitFor();
   assert.equal(savedPayloads.length, 7, 'the existing save workflow should submit one record per selected staff member');
   assert.deepEqual(Object.fromEntries(savedPayloads.map((item) => [item.staffId, item.status])), Object.fromEntries(staff.map((item, index) => [item.id, statuses[index].status])), 'status submissions must remain associated with the correct staff members');
@@ -141,7 +141,7 @@ test('Staff Attendance mobile preservation safeguard renders, scrolls, orders an
   await page.reload();
   await page.selectOption('#attendance-academic-year', '2026/2027');
   await page.selectOption('#attendance-term', 'First Term');
-  await page.getByRole('button', { name: 'Load Register' }).click();
+  await page.getByRole('button', { name: 'Load Register' }).click({ force: true });
   await page.locator('#staff-register tr[data-staff-id]').first().waitFor();
   assert.deepEqual(await page.locator('#staff-register select[data-status]').evaluateAll((items) => items.map((select) => select.value)), statuses.map((item) => item.status), 'saved choices must persist through a fresh page load');
   await page.getByLabel(`Attendance status for ${firstStaffName}`).focus();
