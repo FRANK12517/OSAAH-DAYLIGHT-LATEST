@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T16:59:48.958Z",
+  "generatedAt": "2026-11-03T01:36:41.983Z",
   "part": 29,
   "baseline": {
     "source": "Part 28 release-gate report supplied with the implementation specification",
@@ -15,8 +15,8 @@
       "ASSISTANT_HEADTEACHER",
       "TEACHER"
     ],
-    "roleDestinationRecords": 230,
-    "componentTargetPasses": 230,
+    "roleDestinationRecords": 245,
+    "componentTargetPasses": 245,
     "missingComponentTargetBlockers": 0,
     "sharedRouteContracts": 0,
     "duplicateRouteBlockers": 0,
@@ -851,6 +851,71 @@
       "existingImplementationFound": true,
       "newRoute": "/admissions/prospectus",
       "exactView": "admission-prospectus",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-enquiries",
+      "role": "HEADTEACHER",
+      "parent": null,
+      "child": "Enquiries",
+      "oldRoute": "/admissions/enquiries",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/enquiries",
+      "exactView": "admission-enquiries",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-applications",
+      "role": "HEADTEACHER",
+      "parent": null,
+      "child": "Applications",
+      "oldRoute": "/admissions/applications",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/applications",
+      "exactView": "admission-applications",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-review",
+      "role": "HEADTEACHER",
+      "parent": null,
+      "child": "Application Review",
+      "oldRoute": "/admissions/review",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/review",
+      "exactView": "admission-review",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-offers",
+      "role": "HEADTEACHER",
+      "parent": null,
+      "child": "Admission Offers",
+      "oldRoute": "/admissions/offers",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/offers",
+      "exactView": "admission-offers",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-enrollment",
+      "role": "HEADTEACHER",
+      "parent": null,
+      "child": "Enrollment",
+      "oldRoute": "/admissions/enrollment",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/enrollment",
+      "exactView": "admission-enrollment",
       "component": "/operations-canonical.html",
       "apiDependencies": [],
       "result": "PASS"
@@ -2142,6 +2207,21 @@
       "result": "PASS"
     },
     {
+      "navigationKey": "student-search",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Student Search",
+      "oldRoute": "/students/search",
+      "existingImplementationFound": true,
+      "newRoute": "/students/search",
+      "exactView": "student-search",
+      "component": "/student-canonical.html",
+      "apiDependencies": [
+        "/api/students"
+      ],
+      "result": "PASS"
+    },
+    {
       "navigationKey": "completed-class-database",
       "role": "ASSISTANT_HEADTEACHER",
       "parent": null,
@@ -2171,6 +2251,66 @@
       "result": "PASS"
     },
     {
+      "navigationKey": "student-directory",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Student Directory",
+      "oldRoute": "/students/directory",
+      "existingImplementationFound": true,
+      "newRoute": "/students/directory",
+      "exactView": "student-directory",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [
+        "/api/students"
+      ],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "student-ids",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Student IDs",
+      "oldRoute": "/students/ids",
+      "existingImplementationFound": true,
+      "newRoute": "/students/ids",
+      "exactView": "student-ids",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [
+        "/api/students"
+      ],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "student-transfers",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Transfers",
+      "oldRoute": "/students/transfers",
+      "existingImplementationFound": true,
+      "newRoute": "/students/transfers",
+      "exactView": "student-transfers",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [
+        "/api/students"
+      ],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "student-alumni",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Alumni",
+      "oldRoute": "/students/alumni",
+      "existingImplementationFound": true,
+      "newRoute": "/students/alumni",
+      "exactView": "student-alumni",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [
+        "/api/students"
+      ],
+      "result": "PASS"
+    },
+    {
       "navigationKey": "admission-prospectus",
       "role": "ASSISTANT_HEADTEACHER",
       "parent": null,
@@ -2179,6 +2319,71 @@
       "existingImplementationFound": true,
       "newRoute": "/admissions/prospectus",
       "exactView": "admission-prospectus",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-enquiries",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Enquiries",
+      "oldRoute": "/admissions/enquiries",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/enquiries",
+      "exactView": "admission-enquiries",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-applications",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Applications",
+      "oldRoute": "/admissions/applications",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/applications",
+      "exactView": "admission-applications",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-review",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Application Review",
+      "oldRoute": "/admissions/review",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/review",
+      "exactView": "admission-review",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-offers",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Admission Offers",
+      "oldRoute": "/admissions/offers",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/offers",
+      "exactView": "admission-offers",
+      "component": "/operations-canonical.html",
+      "apiDependencies": [],
+      "result": "PASS"
+    },
+    {
+      "navigationKey": "admission-enrollment",
+      "role": "ASSISTANT_HEADTEACHER",
+      "parent": null,
+      "child": "Enrollment",
+      "oldRoute": "/admissions/enrollment",
+      "existingImplementationFound": true,
+      "newRoute": "/admissions/enrollment",
+      "exactView": "admission-enrollment",
       "component": "/operations-canonical.html",
       "apiDependencies": [],
       "result": "PASS"
