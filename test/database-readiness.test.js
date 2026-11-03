@@ -114,12 +114,34 @@ test('standard connection variables override MySQL URL destination while it supp
   assert.doesNotMatch(JSON.stringify(result), /sample-password|url-host|tidb-host|url_database/);
 });
 
+test('complete split TiDB settings take precedence over a stale DATABASE_URL', async () => {
+  const result = await inspectDatabaseConfiguration({ environment: {
+    OSAAH_DATABASE_ADAPTER: 'tidb',
+    HOST: 'current-tidb.example.invalid',
+    PORT: '4000',
+    DATABASE: 'osaahdaylightschool',
+    Username: 'current-user',
+    Password: 'current-password',
+    DATABASE_URL: 'mysql://old-user:old-password@retired-host.example.invalid:3306/old_school'
+  } });
+  assert.equal(result.configurationStatus, 'CONFIGURATION_VALID');
+  assert.equal(result.selectedDatabase, 'osaahdaylightschool');
+  assert.deepEqual(result.conflicts, []);
+  assert.deepEqual(result.configuredSources, { host: 'HOST', database: 'DATABASE', port: 'PORT' });
+  assert.doesNotMatch(JSON.stringify(result), /current-user|current-password|retired-host|old_school/);
+});
+
 test('database readiness detects differing connection overrides without revealing configured values', async () => {
   const result = await inspectDatabaseConfiguration({ environment: tidbEnvironment({
     HOST: 'another-host.example.invalid',
+    TIDB_HOST: 'primary-host.example.invalid',
+    DATABASE: 'osaahdaylightschool',
     TIDB_DATABASE: 'other_database',
+    PORT: '4000',
     TIDB_PORT: '4100',
+    Username: 'primary-user',
     TIDB_USER: 'different-user',
+    Password: 'primary-password',
     TIDB_PASSWORD: 'different-password'
   }) });
   assert.deepEqual(result.conflicts, [

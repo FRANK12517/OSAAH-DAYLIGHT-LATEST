@@ -12,6 +12,8 @@ For the intended TiDB runtime, configure these values in the server-side environ
 
 The adapter also supports component variables. For TiDB, precedence is `HOST`, then `TIDB_HOST`, then the URL host; `DATABASE`, then `TIDB_DATABASE`, then the URL database; and `PORT`, then `TIDB_PORT`, then the URL port, defaulting to 3306. Credentials use `TIDB_USER` and `TIDB_PASSWORD` before URL credentials. The diagnostic reports the selected sources without printing values.
 
+When all five split connection fields (host, port, database, user, and password) are configured, that complete split configuration takes precedence and `DATABASE_URL` is ignored. This allows an obsolete URL to remain during a transition without affecting the active TiDB connection. If the split configuration is incomplete, `DATABASE_URL` remains active and is checked against any supplied overrides.
+
 `OSAAH_POSTGRES_URL` and `POSTGRES_URL` select the supported PostgreSQL adapter when no explicit TiDB selector overrides the choice. If a PostgreSQL runtime URL and a MySQL `DATABASE_URL` are both present without an explicit adapter, PostgreSQL currently takes precedence; the diagnostic reports this. Remove stale variables and explicitly select TiDB for the intended deployment. Explicit TiDB selection rejects PostgreSQL runtime URLs.
 
 ## Configuration-only diagnostic
