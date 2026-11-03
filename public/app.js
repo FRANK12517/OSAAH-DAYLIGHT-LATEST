@@ -44,6 +44,7 @@ function setActiveSidebarRoute(dashboard, route) { dashboard.querySelectorAll('.
 function renderWorkspaceRoute(dashboard, route, title, navigationKey = null, exactView = null) {
   const overview = dashboard.querySelector('#dashboard-overview'); const host = dashboard.querySelector('#module-workspace'); const frame = dashboard.querySelector('#module-frame'); const status = dashboard.querySelector('#module-status');
   const navigationVersion = Number(dashboard.dataset.navigationVersion ?? 0) + 1; dashboard.dataset.navigationVersion = String(navigationVersion);
+  clearTimeout(Number(dashboard.dataset.navigationTimer)); dashboard.dataset.navigationTimer = '';
   setActiveSidebarRoute(dashboard, route);
   frame.onload = null; frame.onerror = null; frame.hidden = true;
   if (route === '/') { overview.hidden = false; host.hidden = true; mountDashboardOverview(dashboard); document.title = 'OsaaH Daylight School'; return; }
@@ -51,8 +52,15 @@ function renderWorkspaceRoute(dashboard, route, title, navigationKey = null, exa
   const normalizedRoute = String(route || '/').replace(/\/$/, '') || '/';
   const url = new URL(normalizedRoute, location.origin); url.searchParams.set('embedded', '1'); url.searchParams.set('route', normalizedRoute); if (navigationKey) url.searchParams.set('navigationKey', navigationKey); if (exactView) url.searchParams.set('view', exactView);
   const currentVersion = String(navigationVersion);
-  frame.onload = () => { if (dashboard.dataset.navigationVersion !== currentVersion) return; frame.hidden = false; status.hidden = true; };
-  frame.onerror = (error) => { if (dashboard.dataset.navigationVersion !== currentVersion) return; console.error('OSAAH module render failure', { route: normalizedRoute, title, error }); frame.hidden = true; status.hidden = false; status.className = 'module-status error'; status.textContent = `Unable to open ${title}. Please retry or contact the system administrator.`; };
+  const failToOpen = (reason, error) => {
+    if (dashboard.dataset.navigationVersion !== currentVersion) return;
+    clearTimeout(Number(dashboard.dataset.navigationTimer)); dashboard.dataset.navigationTimer = '';
+    if (error) console.error('OSAAH module render failure', { route: normalizedRoute, navigationKey, title, reason, error });
+    frame.hidden = true; status.hidden = false; status.className = 'module-status error'; status.textContent = reason === 'timeout' ? `${title} is taking too long to open. Please retry.` : `Unable to open ${title}. Please retry or contact the system administrator.`;
+  };
+  dashboard.dataset.navigationTimer = String(window.setTimeout(() => failToOpen('timeout'), 20000));
+  frame.onload = () => { if (dashboard.dataset.navigationVersion !== currentVersion) return; clearTimeout(Number(dashboard.dataset.navigationTimer)); dashboard.dataset.navigationTimer = ''; frame.hidden = false; status.hidden = true; };
+  frame.onerror = (error) => failToOpen('load-error', error);
   const frameUrl = url.pathname + url.search;
   const currentFrameUrl = frame.contentWindow?.location.href;
   if (!currentFrameUrl || currentFrameUrl === 'about:blank') frame.src = frameUrl;
