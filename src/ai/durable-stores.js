@@ -24,38 +24,44 @@ function splitTiDBConfiguration(environment) {
 }
 export function inspectDatabaseConfiguration({ environment = process.env } = {}) {
   const split = splitTiDBConfiguration(environment);
-  const databaseUrl = split.complete ? '' : typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
+  const databaseUrl = typeof environment.DATABASE_URL === 'string' ? environment.DATABASE_URL.trim() : '';
   const postgresUrl = [environment.OSAAH_POSTGRES_URL, environment.POSTGRES_URL].some((value) => typeof value === 'string' && value.trim());
   const mysqlUrl = mysqlConnectionString(databaseUrl);
   let url;
   if (mysqlUrl) { try { url = new URL(databaseUrl); } catch { /* Report below without exposing input. */ } }
-  const databaseName = split.complete ? split.database : String(url?.pathname?.slice(1) ?? (databaseUrl ? '' : split.database)).trim();
+  const databaseName = split.complete ? split.database : configuredValue(environment.TIDB_DATABASE, environment.DATABASE, url?.pathname?.slice(1));
   const missingSettings = [];
   if (!databaseUrl && !split.complete && !split.host) missingSettings.push('HOST');
   if (!databaseUrl && !split.complete && !split.user) missingSettings.push('TIDB_USER');
   if (!databaseUrl && !split.complete && !split.password) missingSettings.push('TIDB_PASSWORD');
   if (!databaseUrl && !databaseName) missingSettings.push('DATABASE');
   const conflicts = [];
+  const decodeUrlCredential = (value) => {
+    if (!value) return undefined;
+    try { return decodeURIComponent(value); }
+    catch { conflicts.push('DATABASE_URL_INVALID'); return undefined; }
+  };
   if (postgresUrl || postgresConnectionString(databaseUrl)) conflicts.push('DATABASE_CONFIGURATION_CONFLICT');
+  const hasPartialTiDBOverrides = [environment.TIDB_HOST, environment.TIDB_PORT, environment.TIDB_DATABASE, environment.TIDB_USER, environment.TIDB_PASSWORD].some((value) => typeof value === 'string' && value.trim());
   const sourcePairs = split.complete
     ? [
-      ['HOST_SOURCES_DIFFER', environment.TIDB_HOST, environment.HOST],
-      ['DATABASE_SOURCES_DIFFER', environment.TIDB_DATABASE, environment.DATABASE],
-      ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, environment.PORT],
-      ['USERNAME_SOURCES_DIFFER', environment.TIDB_USER, environment.Username ?? environment.USERNAME],
-      ['PASSWORD_SOURCES_DIFFER', environment.TIDB_PASSWORD, environment.Password ?? environment.PASSWORD]
+      ['HOST_SOURCES_DIFFER', environment.TIDB_HOST, environment.HOST, url?.hostname],
+      ['DATABASE_SOURCES_DIFFER', environment.TIDB_DATABASE, environment.DATABASE, url?.pathname?.slice(1)],
+      ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, environment.PORT, url?.port],
+      ['USERNAME_SOURCES_DIFFER', environment.TIDB_USER, environment.Username ?? environment.USERNAME, decodeUrlCredential(url?.username)],
+      ['PASSWORD_SOURCES_DIFFER', environment.TIDB_PASSWORD, environment.Password ?? environment.PASSWORD, decodeUrlCredential(url?.password)]
     ]
     : [
-      ['HOST_SOURCES_DIFFER', databaseUrl ? undefined : environment.HOST, environment.TIDB_HOST, url?.hostname],
-      ['DATABASE_SOURCES_DIFFER', databaseUrl ? undefined : environment.DATABASE, environment.TIDB_DATABASE, url?.pathname?.slice(1)],
-      ['PORT_SOURCES_DIFFER', environment.TIDB_PORT, url?.port]
+      ['HOST_SOURCES_DIFFER', environment.HOST, environment.TIDB_HOST, hasPartialTiDBOverrides ? url?.hostname : undefined],
+      ['DATABASE_SOURCES_DIFFER', environment.DATABASE, environment.TIDB_DATABASE, hasPartialTiDBOverrides ? url?.pathname?.slice(1) : undefined],
+      ['PORT_SOURCES_DIFFER', environment.PORT, environment.TIDB_PORT, hasPartialTiDBOverrides ? url?.port : undefined]
     ];
   for (const [code, ...values] of sourcePairs) {
     const configured = values.filter((value) => value !== undefined && value !== null && String(value).trim()).map(String);
     if (new Set(configured).size > 1) conflicts.push(code);
   }
-  if (!split.complete && environment.TIDB_USER && url?.username && String(environment.TIDB_USER) !== decodeURIComponent(url.username)) conflicts.push('USERNAME_SOURCES_DIFFER');
-  if (!split.complete && environment.TIDB_PASSWORD && url?.password && String(environment.TIDB_PASSWORD) !== decodeURIComponent(url.password)) conflicts.push('PASSWORD_SOURCES_DIFFER');
+  if (!split.complete && environment.TIDB_USER && url?.username && String(environment.TIDB_USER) !== decodeUrlCredential(url.username)) conflicts.push('USERNAME_SOURCES_DIFFER');
+  if (!split.complete && environment.TIDB_PASSWORD && url?.password && String(environment.TIDB_PASSWORD) !== decodeUrlCredential(url.password)) conflicts.push('PASSWORD_SOURCES_DIFFER');
   if (environment.OSAAH_DATABASE_ADAPTER && String(environment.OSAAH_DATABASE_ADAPTER).trim().toLowerCase() !== 'tidb') conflicts.push('DATABASE_ADAPTER_INVALID');
   if (databaseUrl && !mysqlUrl) conflicts.push('DATABASE_URL_INVALID');
   if (databaseUrl && mysqlUrl && !url) conflicts.push('DATABASE_URL_INVALID');
@@ -76,7 +82,7 @@ export function inspectDatabaseConfiguration({ environment = process.env } = {})
     conflicts: duplicateConflicts,
     warnings: [],
     tls: { enabled: true, minimumVersion: 'TLSv1.2', certificateVerification: true, customCaProvided: Boolean(environment.TIDB_CA_CERT?.trim()) },
-    configuredSources: { host: split.complete ? (environment.TIDB_HOST ? 'TIDB_HOST' : 'HOST') : url?.hostname ? 'DATABASE_URL' : environment.HOST ? 'HOST' : environment.TIDB_HOST ? 'TIDB_HOST' : null, database: split.complete ? (environment.TIDB_DATABASE ? 'TIDB_DATABASE' : 'DATABASE') : url?.pathname ? 'DATABASE_URL' : environment.DATABASE ? 'DATABASE' : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : null, port: split.complete ? (environment.TIDB_PORT ? 'TIDB_PORT' : 'PORT') : url?.port ? 'DATABASE_URL' : environment.TIDB_PORT ? 'TIDB_PORT' : null }
+    configuredSources: { host: split.complete ? (environment.TIDB_HOST ? 'TIDB_HOST' : 'HOST') : environment.TIDB_HOST ? 'TIDB_HOST' : environment.HOST ? 'HOST' : url?.hostname ? 'DATABASE_URL' : null, database: split.complete ? (environment.TIDB_DATABASE ? 'TIDB_DATABASE' : 'DATABASE') : environment.TIDB_DATABASE ? 'TIDB_DATABASE' : environment.DATABASE ? 'DATABASE' : url?.pathname ? 'DATABASE_URL' : null, port: split.complete ? (environment.TIDB_PORT ? 'TIDB_PORT' : 'PORT') : environment.TIDB_PORT ? 'TIDB_PORT' : environment.PORT ? 'PORT' : url?.port ? 'DATABASE_URL' : null }
   };
 }
 function configuredDatabaseAdapterModule(environment) {

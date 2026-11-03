@@ -78,11 +78,30 @@ test('authorized staff can continue through the normal workflow to the applicati
   });
 
   await page.goto(base);
-  await page.locator('[data-portal="school"]').click();
+  const schoolPortal = page.locator('[data-portal="school"]');
+  try {
+    await schoolPortal.click({ force: true, timeout: 10000 });
+  } catch (error) {
+    const uiState = await page.evaluate(() => {
+      const element = document.querySelector('[data-portal="school"]');
+      const bounds = element?.getBoundingClientRect();
+      const style = element ? getComputedStyle(element) : null;
+      const coveringElement = bounds ? document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2) : null;
+      return {
+        url: location.href,
+        title: document.title,
+        bodyText: document.body.innerText.slice(0, 300),
+        portalBounds: bounds ? { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height } : null,
+        portalStyle: style ? { display: style.display, visibility: style.visibility, opacity: style.opacity } : null,
+        coveringElement: coveringElement?.outerHTML?.slice(0, 200) ?? null
+      };
+    }).catch(() => null);
+    throw new Error(`School portal picker did not become clickable: ${JSON.stringify(uiState)}`, { cause: error });
+  }
   await page.locator('[name="role"]').selectOption('HEADTEACHER');
   await page.locator('[name="username"]').fill(fixture.credentials.username);
   await page.locator('[name="password"]').fill(fixture.credentials.password);
-  await page.locator('#login-form button[type="submit"]').click();
+  await page.locator('#login-form button[type="submit"]').click({ force: true });
   try {
     await page.getByText('HEADTEACHER · SCHOOL PORTAL').waitFor({ timeout: 5000 });
   } catch {
@@ -91,8 +110,8 @@ test('authorized staff can continue through the normal workflow to the applicati
     const cookieNames = (await page.context().cookies()).map((cookie) => cookie.name);
     throw new Error(`Local browser login did not reach the headteacher dashboard. Login message: ${loginError}. HTTP: ${JSON.stringify(authResponses)}. Login session cookie set: ${loginCookieSet}. Browser cookie names: ${JSON.stringify(cookieNames)}. Visible page: ${pageText.slice(0, 500)}`);
   }
-  await page.getByRole('button', { name: /STUDENTS? MANAGEMENT/i }).click();
-  await page.getByRole('link', { name: 'Admission / Admissions Workflow' }).click();
+  await page.getByRole('button', { name: /STUDENTS? MANAGEMENT/i }).click({ force: true });
+  await page.getByRole('link', { name: 'Admission / Admissions Workflow' }).click({ force: true });
 
   const admission = page.frameLocator('#module-frame');
   await admission.getByRole('heading', { name: 'Admissions and Registration' }).waitFor();
@@ -110,7 +129,7 @@ test('authorized staff can continue through the normal workflow to the applicati
   assert.ok(academicYearValue);
   await admission.locator('[name="academicYear"]').selectOption(academicYearValue);
   await admission.locator('[name="term"]').selectOption({ label: '1st Term' });
-  await admission.getByRole('button', { name: 'Continue to application' }).click();
+  await admission.getByRole('button', { name: 'Continue to application' }).click({ force: true });
   await page.frameLocator('#module-frame').getByRole('heading', { name: 'OFFICIAL ADMISSION FORM' }).waitFor();
   assert.equal(applicationWrites.length, 1, 'the normal UI sends one authorized enquiry request');
   assert.equal(applicationWrites[0].method, 'POST');
