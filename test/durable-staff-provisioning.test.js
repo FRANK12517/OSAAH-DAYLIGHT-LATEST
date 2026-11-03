@@ -224,6 +224,50 @@ test('staff provisioning commits linked durable records and a new auth service c
   assert.deepEqual(listed[0].assignedClassIds, ['primary-4']);
 });
 
+test('School Administrator provisioning is durable and remains visible after auth service restart', async () => {
+  const database = createFakeDatabase();
+  const auth = createAuthService({ database });
+  const created = await auth.createAdministrator({
+    fullName: 'School Administrator',
+    staffId: 'OSAAH-ADMIN-001',
+    email: 'administrator@example.test'
+  }, { id: 'proprietor-id', schoolId: SCHOOL_ID });
+
+  assert.equal(created.administrator.username, 'administrator@example.test');
+  assert.equal(created.administrator.status, 'ACTIVE');
+  assert.ok(created.temporaryPassword);
+  const stored = database.snapshot();
+  assert.equal(stored.users.length, 1);
+  assert.equal(stored.staff.length, 1);
+  assert.equal(stored.profiles.length, 1);
+  assert.equal(stored.userRoles.length, 1);
+  assert.equal(stored.users[0].role, 'SCHOOL_ADMIN');
+
+  const restartedAuth = createAuthService({ database });
+  const login = await restartedAuth.loginFromDatabase({
+    username: 'administrator@example.test',
+    password: created.temporaryPassword,
+    portal: 'school'
+  });
+  assert.equal(login.ok, true);
+  assert.equal(login.user.roleKey, 'SCHOOL_ADMIN');
+
+  const administrators = await restartedAuth.listAdministrators(SCHOOL_ID);
+  assert.equal(administrators.length, 1);
+  assert.equal(administrators[0].id, created.administrator.id);
+  assert.equal(administrators[0].email, 'administrator@example.test');
+
+  const teacher = await restartedAuth.registerStaff({
+    fullName: 'Test Teacher',
+    staffId: 'OSAAH-TEACHER-002',
+    username: 'teacher@example.test',
+    email: 'teacher@example.test',
+    primaryRole: 'TEACHER'
+  }, { id: 'proprietor-id', schoolId: SCHOOL_ID });
+  assert.equal(await restartedAuth.getAdministrator(teacher.staff.id, SCHOOL_ID), null);
+  assert.equal(await restartedAuth.resetAdministratorCredentials(teacher.staff.id, SCHOOL_ID), null);
+});
+
 test('staff passwords enforce policy and generated credentials contain all required character classes', async () => {
   const database = createFakeDatabase();
   const auth = createAuthService({ database });
