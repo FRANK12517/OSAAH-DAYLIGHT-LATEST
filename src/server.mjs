@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { SIDEBAR_MODULES, parentDashboardModules, sidebarHealth, visibleSidebar } from './sidebar-registry.js';
 import { canAccess, canonicalRoleKey, createAuthService } from './auth.js';
 import { createUserDirectoryService } from './user-directory.js';
+import { createRoleProvisioningDiagnostic } from './role-provisioning-diagnostic.js';
 import { createAuditLog } from './audit.js';
 import { CORE_LEVELS, createStudentService } from './students.js';
 import { canonicalClassId } from './student-classes.js';
@@ -135,6 +136,7 @@ export function createApp({ auth = null, parentSmsAuth = null, students = null, 
   auth ??= createAuthService({ database, testParentSchoolId: serviceSchoolId });
   schoolSettings ??= createSchoolSettingsService({ database, schoolProfile: branding });
   const userDirectory = createUserDirectoryService({ database, canonicalSchoolId: serviceSchoolId });
+  const roleProvisioningDiagnostic = createRoleProvisioningDiagnostic({ database });
   attendance ??= createAttendanceService({ requireReasons: true, schoolId: serviceSchoolId });
   fees ??= createFeeService({ schoolId: serviceSchoolId });
   feeTypes ??= createFeeTypeRegistry({ schoolId: serviceSchoolId });
@@ -469,6 +471,18 @@ export function createApp({ auth = null, parentSmsAuth = null, students = null, 
       if (user) {
         try { resolveCurrentSchoolContext(user); }
         catch (error) { return json(response, { error: error.message, code: error.code }, error.status ?? 403); }
+      }
+      if (pathname === '/api/admin/verify-role-provisioning') {
+        if (request.method !== 'GET') return json(response, { error: 'Method not allowed.' }, 405);
+        if (!user) return json(response, { error: 'UNAUTHENTICATED' }, 401);
+        if (user.portal !== 'school' || user.roleKey !== 'PROPRIETOR') return json(response, { error: 'Forbidden.' }, 403);
+        try {
+          const accounts = await roleProvisioningDiagnostic.inspect(user.schoolId);
+          audit(createAuditLog({ schoolId: user.schoolId, userId: user.id, roleId: user.roleKey, action: 'ROLE_PROVISIONING_DIAGNOSTIC', entity: 'RoleProvisioningDiagnostic', newValue: { accountCount: accounts.length } }));
+          return json(response, { accounts }, 200);
+        } catch {
+          return json(response, { error: 'Role provisioning diagnostic is unavailable.', code: 'DIAGNOSTIC_UNAVAILABLE' }, 503);
+        }
       }
       if (pathname === '/api/fees/obligations/publish' && request.method === 'POST') { if (!user) return json(response,{error:'UNAUTHENTICATED'},401); if (!feeCollections) return json(response,{error:'PERSISTENCE_UNAVAILABLE'},503); if (!canAccess(user,'fees.write')) return json(response,{error:'Forbidden.'},403); try { const body=await readJson(request); if (body.students || body.studentRows || body.studentIds) return json(response,{error:'Student lists are not accepted.'},400); const customFeeTypeName=String(body.customFeeTypeName??'').trim(); if (body.feeStructureId==='OTHER' && !customFeeTypeName) return json(response,{error:'Specify Fee Type is required when Other is selected.'},400); const input={scope:body.scope,feeStructureId:body.feeStructureId, classId:body.scope==='SPECIFIC_CLASS'?body.classId:null, academicYearId:body.academicYearId??body.academicYear, termId:body.termId??body.term, amountMinor:body.amountMinor, customFeeTypeName:customFeeTypeName||null}; if (customFeeTypeName && database?.execute) { try { await database.execute('UPDATE fee_structures SET custom_fee_type_name=? WHERE id=? AND school_id=?',[customFeeTypeName,input.feeStructureId,user.schoolId]); } catch {} } const result=await feeCollections.publishFeeObligations(input, user); students.listStudents({ requestedSchoolId:user.schoolId }).filter((student)=>!input.classId||student.classId===input.classId).forEach((student)=>dispatchParentMessage({studentId:student.id,category:'FEE_PUBLISHED',title:'Fee published',body:'A fee of GHS '+(Number(input.amountMinor||0)/100).toFixed(2)+' has been published for '+[student.firstName,student.middleName,student.surname].filter(Boolean).join(' ')+', Permanent Student ID '+student.permanentStudentId+'.',idempotencyKey:'FEE_PUBLISHED:'+result.created_count+':'+student.permanentStudentId})); return json(response,{scope:body.scope,eligible_count:result.eligible_count,created_count:result.created_count,skipped_count:result.skipped_count,classId:input.classId??null,academicYear:input.academicYearId??null,term:input.termId??null,customFeeTypeName:customFeeTypeName||null}); } catch(error){ const safe=safeFeeError(error,400); return json(response,safe.body,safe.status); } }
       if (pathname === '/api/parent/fee-obligations' && request.method === 'GET') { if (!user) return json(response,{error:'UNAUTHENTICATED'},401); if (!parentFeeObligations) return json(response,{error:'PERSISTENCE_UNAVAILABLE'},503); try { return json(response,await parentFeeObligations.listForParent(user,Object.fromEntries(new URL(request.url,'http://localhost').searchParams))); } catch(error){ const safe=safeFeeError(error); return json(response,safe.body,safe.status); } }
