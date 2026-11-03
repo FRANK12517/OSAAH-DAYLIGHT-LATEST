@@ -7,6 +7,8 @@ function generatedPassword() { const required = ['A', 'a', '1', PASSWORD_SYMBOLS
 function normalizedUsername(value, fallback) { return String(value ?? fallback ?? '').trim().toLowerCase(); }
 
 const STAFF_ROLES = Object.freeze({
+  SCHOOL_ADMIN: 'SCHOOL_ADMIN',
+  ADMINISTRATOR: 'SCHOOL_ADMIN',
   HEADTEACHER: 'HEADTEACHER',
   ASSISTANT_HEADTEACHER: 'ASSISTANT_HEADTEACHER',
   ACCOUNTANT: 'ACCOUNTANT_BURSAR',
@@ -171,7 +173,7 @@ export function createDurableStaffProvisioning({ database, passwordHash, verifyL
       JOIN roles r ON r.id=ur.role_id AND (r.school_id=s.school_id OR r.school_id IS NULL)
       LEFT JOIN staff_profiles sp ON sp.user_id=s.user_id AND sp.school_id=s.school_id
       LEFT JOIN staff_assignments sa ON sa.staff_id=s.id
-      WHERE ${conditions} AND r.role_key IN ('TEACHER','HEADTEACHER','ASSISTANT_HEADTEACHER','ACCOUNTANT_BURSAR')
+      WHERE ${conditions} AND r.role_key IN ('SCHOOL_ADMIN','TEACHER','HEADTEACHER','ASSISTANT_HEADTEACHER','ACCOUNTANT_BURSAR')
       ORDER BY s.staff_number,s.id`, params);
   }
 

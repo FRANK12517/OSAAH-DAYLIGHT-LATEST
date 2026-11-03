@@ -8,8 +8,10 @@ function createFakeDatabase({ failAt = null } = {}) {
   let state = {
     schools: [{ id: SCHOOL_ID }],
     roles: [
+      { id: 'role-admin', school_id: SCHOOL_ID, role_key: 'SCHOOL_ADMIN', oversight_rank: 90 },
       { id: 'role-teacher', school_id: SCHOOL_ID, role_key: 'TEACHER', oversight_rank: 40 },
       { id: 'role-headteacher', school_id: SCHOOL_ID, role_key: 'HEADTEACHER', oversight_rank: 80 },
+      { id: 'role-assistant-headteacher', school_id: SCHOOL_ID, role_key: 'ASSISTANT_HEADTEACHER', oversight_rank: 70 },
       { id: 'role-accountant', school_id: SCHOOL_ID, role_key: 'ACCOUNTANT_BURSAR', oversight_rank: 30 }
     ],
     classes: [{ id: 'primary-4', school_id: SCHOOL_ID }],
@@ -68,7 +70,7 @@ function createFakeDatabase({ failAt = null } = {}) {
         const roleLinks = store.userRoles.filter((link) => link.user_id === user?.id);
         const assignments = store.assignments.filter((row) => row.staff_id === staff.id);
         return roleLinks.flatMap((link) => {
-          const role = store.roles.find((row) => row.id === link.role_id && row.school_id === staff.school_id && ['TEACHER', 'HEADTEACHER', 'ASSISTANT_HEADTEACHER', 'ACCOUNTANT_BURSAR'].includes(row.role_key));
+          const role = store.roles.find((row) => row.id === link.role_id && row.school_id === staff.school_id && ['SCHOOL_ADMIN', 'TEACHER', 'HEADTEACHER', 'ASSISTANT_HEADTEACHER', 'ACCOUNTANT_BURSAR'].includes(row.role_key));
           return role ? (assignments.length ? assignments.map((assignment) => ({ id: staff.id, staffId: staff.staff_number, firstName: staff.first_name, lastName: staff.last_name, username: user.email, email: user.email, accountStatus: user.status, createdAt: user.created_at, fullName: profile.full_name, phone: profile.phone, roleKey: role.role_key, assignedClassId: assignment.class_id, assignedSubjectId: assignment.subject_id })) : [{ id: staff.id, staffId: staff.staff_number, firstName: staff.first_name, lastName: staff.last_name, username: user.email, email: user.email, accountStatus: user.status, createdAt: user.created_at, fullName: profile.full_name, phone: profile.phone, roleKey: role.role_key, assignedClassId: null, assignedSubjectId: null }]) : [];
         });
       });
@@ -233,6 +235,24 @@ test('staff passwords enforce policy and generated credentials contain all requi
   assert.match(created.temporaryPassword, /\d/);
   assert.match(created.temporaryPassword, /[^A-Za-z0-9]/);
   assert.ok(created.temporaryPassword.length >= 12);
+});
+test('durable staff provisioning supports each requested role and dashboard', async () => {
+  const database = createFakeDatabase();
+  const auth = createAuthService({ database });
+  const scenarios = [
+    { name: 'School Administrator', staffId: 'GEN-ADMIN-001', email: 'admin@example.test', role: 'SCHOOL_ADMIN', password: 'SyntheticAdmin123!' , dashboard: '/settings' },
+    { name: 'Headteacher', staffId: 'GEN-HEAD-001', email: 'head@example.test', role: 'HEADTEACHER', password: 'SyntheticHead123!', dashboard: '/academics' },
+    { name: 'Assistant Headteacher', staffId: 'GEN-AHEAD-001', email: 'assistant@example.test', role: 'ASSISTANT_HEADTEACHER', password: 'SyntheticAssistant123!', dashboard: '/academics' },
+    { name: 'Accountant', staffId: 'GEN-ACCOUNTANT-001', email: 'accountant@example.test', role: 'ACCOUNTANT', password: 'SyntheticAccountant123!', dashboard: '/fees' },
+    { name: 'Teacher', staffId: 'GEN-TEACHER-001', email: 'teacher@example.test', role: 'CLASSROOM_TEACHER', password: 'SyntheticTeacher123!', dashboard: '/academics' }
+  ];
+  for (const scenario of scenarios) {
+    const created = await auth.registerStaff({ ...newTeacher, fullName: scenario.name, staffId: scenario.staffId, email: scenario.email, username: scenario.email, primaryRole: scenario.role, password: scenario.password }, actor);
+    const login = await createAuthService({ database }).loginFromDatabase({ username: scenario.email, password: scenario.password, portal: 'school' });
+    assert.equal(created.staff.roleKey, scenario.role === 'ACCOUNTANT' ? 'ACCOUNTANT_BURSAR' : scenario.role === 'CLASSROOM_TEACHER' ? 'TEACHER' : scenario.role);
+    assert.equal(login.ok, true);
+    assert.equal(login.redirectTo, scenario.dashboard);
+  }
 });
 test('durable staff provisioning rejects duplicate email and Staff ID without creating duplicate records', async () => {
   const database = createFakeDatabase();
