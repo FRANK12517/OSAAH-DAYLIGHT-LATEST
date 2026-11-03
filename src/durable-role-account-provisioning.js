@@ -31,6 +31,30 @@ export function createDurableRoleAccountProvisioning({ database, passwordHash, n
     return rows[0];
   }
 
+  async function assertNoLinkedRecords(tx, tableName, recordId, roleKey) {
+    const references = await tx.query(`SELECT TABLE_NAME AS tableName, COLUMN_NAME AS columnName
+      FROM information_schema.KEY_COLUMN_USAGE
+      WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME=?
+      ORDER BY TABLE_NAME,COLUMN_NAME`, [tableName]);
+    if (!Array.isArray(references)) throw failure('Cross-school staff links could not be checked safely; no accounts were changed.', 503, 'STAFF_DEPENDENCY_CHECK_UNAVAILABLE');
+    let linkedRecordCount = 0;
+    for (const reference of references) {
+      const childTable = String(reference.tableName ?? '');
+      const childColumn = String(reference.columnName ?? '');
+      if (!/^[A-Za-z0-9_]+$/.test(childTable) || !/^[A-Za-z0-9_]+$/.test(childColumn)) {
+        throw failure('Cross-school staff links could not be checked safely; no accounts were changed.', 503, 'STAFF_DEPENDENCY_CHECK_UNAVAILABLE');
+      }
+      const rows = await tx.query(`SELECT COUNT(*) AS referenceCount FROM \`${childTable}\` WHERE \`${childColumn}\`=?`, [recordId]);
+      if (!Array.isArray(rows) || rows.length !== 1) throw failure('Cross-school staff links could not be checked safely; no accounts were changed.', 503, 'STAFF_DEPENDENCY_CHECK_UNAVAILABLE');
+      linkedRecordCount += Number(rows[0].referenceCount ?? 0);
+    }
+    if (linkedRecordCount > 0) {
+      throw failure('A target staff record has dependent records at another school. They were left untouched; no accounts were changed.', 409, 'CROSS_SCHOOL_STAFF_DEPENDENCY_CONFLICT', {
+        roles: [{ role: roleKey, dependentRecordCount: linkedRecordCount }]
+      });
+    }
+  }
+
   async function provision(schoolId) {
     const targetSchoolId = String(schoolId ?? '').trim();
     if (!targetSchoolId) throw failure('Authenticated school context is required.', 403, 'SCHOOL_CONTEXT_REQUIRED');
@@ -54,10 +78,20 @@ export function createDurableRoleAccountProvisioning({ database, passwordHash, n
         if (parentLinks?.length) throw failure('A target account has an existing parent-student relationship; no accounts were changed.', 409, 'CROSS_PORTAL_LINK_CONFLICT');
         const foreignStaff = (staffRows ?? []).filter((row) => String(row.schoolId) !== targetSchoolId);
         const foreignProfiles = (profileRows ?? []).filter((row) => String(row.schoolId) !== targetSchoolId);
-        if (foreignStaff.length || foreignProfiles.length) {
-          throw failure('A target account has staff records at another school. They were left untouched; no accounts were changed.', 409, 'CROSS_SCHOOL_STAFF_RECORD_CONFLICT', {
-            roles: [{ role: target.roleKey, foreignStaffRecordCount: foreignStaff.length, foreignStaffProfileCount: foreignProfiles.length }]
+        if (foreignProfiles.length) {
+          throw failure('A target account has a staff profile at another school. It was left untouched; no accounts were changed.', 409, 'CROSS_SCHOOL_STAFF_PROFILE_CONFLICT', {
+            roles: [{ role: target.roleKey, foreignStaffProfileCount: foreignProfiles.length }]
           });
+        }
+        if (foreignStaff.length || foreignProfiles.length) {
+          for (const row of foreignStaff) {
+            const collisions = await tx.query('SELECT id FROM staff WHERE school_id=? AND staff_number=? AND id<>? LIMIT 1 FOR UPDATE', [targetSchoolId, row.staffNumber, row.id]);
+            if (collisions?.length) throw failure('A target staff number is already used at Osaah Daylight; no accounts were changed.', 409, 'STAFF_NUMBER_CONFLICT', { roles: [{ role: target.roleKey }] });
+            const foreignDepartment = await tx.query(`SELECT d.id FROM staff s JOIN departments d ON d.id=s.department_id
+              WHERE s.id=? AND d.school_id<>? LIMIT 1 FOR UPDATE`, [row.id, targetSchoolId]);
+            if (foreignDepartment?.length) throw failure('A target staff row references another school’s department. It was left untouched; no accounts were changed.', 409, 'CROSS_SCHOOL_DEPARTMENT_CONFLICT', { roles: [{ role: target.roleKey }] });
+            await assertNoLinkedRecords(tx, 'staff', row.id, target.roleKey);
+          }
         }
         if ((staffRows ?? []).length > 1 || (profileRows ?? []).length > 1) throw failure('A target account has duplicate staff records; no accounts were changed.', 409, 'DUPLICATE_STAFF_RECORDS');
         const role = await roleFor(tx, target.roleKey, targetSchoolId);

@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 
 const schoolId = 'osaah-school';
 
-function fixture({ foreignStaff = false } = {}) {
+function fixture({ foreignStaff = false, foreignStaffDependencies = false } = {}) {
   const users = ROLE_ACCOUNT_TARGETS.map((target, index) => ({
     id: `user-${index}`,
     schoolId: 'other-school',
@@ -43,6 +43,10 @@ function fixture({ foreignStaff = false } = {}) {
           if (sql.includes('SELECT id FROM users WHERE LOWER(COALESCE(username')) return [];
           if (sql.includes('FROM staff WHERE user_id=?')) return staff.filter((row) => row.userId === parameters[0]).map(({ id, schoolId: existingSchoolId, staffNumber }) => ({ id, schoolId: existingSchoolId, staffNumber }));
           if (sql.includes('FROM staff_profiles WHERE user_id=?')) return profiles.filter((row) => row.userId === parameters[0]).map(({ id, schoolId: existingSchoolId, staffNumber }) => ({ id, schoolId: existingSchoolId, staffNumber }));
+          if (sql.includes('FROM information_schema.KEY_COLUMN_USAGE')) return foreignStaffDependencies ? [{ tableName: 'staff_attendance', columnName: 'staff_id' }] : [];
+          if (sql.includes('SELECT COUNT(*) AS referenceCount FROM')) return [{ referenceCount: foreignStaffDependencies ? 1 : 0 }];
+          if (sql.includes('SELECT id FROM staff WHERE school_id=? AND staff_number=?')) return [];
+          if (sql.includes('JOIN departments d ON d.id=s.department_id')) return [];
           if (sql.includes('SELECT id FROM staff WHERE id=?')) return [];
           if (sql.includes('SELECT id FROM staff_profiles WHERE id=?')) return [];
           if (sql.includes('FROM parent_student_links')) return [];
@@ -53,6 +57,10 @@ function fixture({ foreignStaff = false } = {}) {
         async execute(sql, parameters = []) {
           executed.push({ sql, parameters });
           if (sql.startsWith('INSERT INTO staff (')) staff.push({ id: parameters[0], schoolId: parameters[1], userId: parameters[2], staffNumber: parameters[3] });
+          else if (sql.startsWith('UPDATE staff SET school_id=')) {
+            const [schoolId, staffNumber, firstName, lastName, _updatedAt, id, userId] = parameters;
+            Object.assign(staff.find((row) => row.id === id && row.userId === userId), { schoolId, staffNumber, firstName, lastName });
+          }
           else if (sql.startsWith('INSERT INTO staff_profiles')) profiles.push({ id: parameters[0], schoolId: parameters[1], userId: parameters[2], staffNumber: parameters[3] });
           else if (sql.startsWith('UPDATE users SET school_id=')) {
             const [nextSchoolId, username, fullName, role, _hash, _updatedAt, id] = parameters;
@@ -89,11 +97,21 @@ test('provisions exactly the fixed five target accounts and verifies durable lin
   assert.equal(state.revoked.length, 5);
 });
 
-test('aborts the whole reconciliation before writes if an account has foreign-school staff links', async () => {
+test('moves a foreign-school staff row when it has no dependent records', async () => {
   const state = fixture({ foreignStaff: true });
+  const result = await state.service.provision(schoolId);
+  assert.equal(result.length, 5);
+  assert.equal(state.executed.some(({ sql }) => sql.startsWith('UPDATE staff SET school_id=')), true);
+  assert.equal(state.staff.find((row) => row.id === 'foreign-staff').schoolId, schoolId);
+  assert.equal(state.users.every((user) => user.schoolId === schoolId), true);
+  assert.equal(state.profiles.length, 5);
+});
+
+test('aborts the whole reconciliation before writes if a foreign staff row has dependent records', async () => {
+  const state = fixture({ foreignStaff: true, foreignStaffDependencies: true });
   await assert.rejects(state.service.provision(schoolId), {
-    code: 'CROSS_SCHOOL_STAFF_RECORD_CONFLICT',
-    details: { roles: [{ role: 'SCHOOL_ADMIN', foreignStaffRecordCount: 1, foreignStaffProfileCount: 0 }] }
+    code: 'CROSS_SCHOOL_STAFF_DEPENDENCY_CONFLICT',
+    details: { roles: [{ role: 'SCHOOL_ADMIN', dependentRecordCount: 1 }] }
   });
   assert.equal(state.executed.length, 0);
   assert.equal(state.users.every((user) => user.schoolId === 'other-school'), true);
