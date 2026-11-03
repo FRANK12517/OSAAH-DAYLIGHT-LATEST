@@ -1,74 +1,26 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "public/index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.webmanifest",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.jpg",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.jpeg",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.svg",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/**/*.ttf",
-      "use": "@vercel/static"
-    },
+    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "public/**/*.js", "use": "@vercel/static" },
+    { "src": "public/**/*.css", "use": "@vercel/static" },
+    { "src": "public/**/*.webmanifest", "use": "@vercel/static" },
+    { "src": "public/**/*.png", "use": "@vercel/static" },
+    { "src": "public/**/*.jpg", "use": "@vercel/static" },
+    { "src": "public/**/*.jpeg", "use": "@vercel/static" },
+    { "src": "public/**/*.svg", "use": "@vercel/static" },
+    { "src": "public/**/*.ttf", "use": "@vercel/static" },
     {
       "src": "src/server.mjs",
       "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "public/**",
-          "src/ai/**"
-        ]
-      }
+      "config": { "includeFiles": ["public/**", "src/ai/**"] }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "src/server.mjs"
-    },
-    {
-      "src": "^/$",
-      "dest": "/public/index.html",
-      "continue": true
-    },
-    {
-      "src": "^/(?!api/)(.*\\.(?:js|css|webmanifest|png|jpe?g|svg|ttf))$",
-      "dest": "/public/$1",
-      "continue": true
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "src/server.mjs"
-    }
+    { "src": "/api/(.*)", "dest": "src/server.mjs" },
+    { "src": "^/$", "dest": "/public/index.html", "continue": true },
+    { "src": "^/(?!api/)(.*\\.(?:js|css|webmanifest|png|jpe?g|svg|ttf))$", "dest": "/public/$1", "continue": true },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "src/server.mjs" }
   ]
 }
