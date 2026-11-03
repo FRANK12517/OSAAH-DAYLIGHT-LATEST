@@ -115,6 +115,36 @@ test('synthetic local staff browser matrix verifies redirects, sessions, RBAC, a
         await page.waitForURL((url) => url.pathname === flow.route, { timeout: 10_000 });
         const roleLandmark = `${flow.roleKey.replaceAll('_', ' ')} · SCHOOL PORTAL`;
         await page.locator('.workspace .topbar .eyebrow').filter({ hasText: roleLandmark }).waitFor();
+        stage = 'open the first visible role-specific sidebar module';
+        const roleModuleLinks = page.locator('.sidebar-link:not([data-module="dashboard"]):not([data-module="logout"])');
+        let childLink = roleModuleLinks.filter({ visible: true }).first();
+        if (await childLink.count() === 0) {
+          const firstGroupToggle = page.locator('.sidebar-group-toggle').first();
+          if (await firstGroupToggle.count()) await firstGroupToggle.click();
+          childLink = roleModuleLinks.filter({ visible: true }).first();
+        }
+        await childLink.waitFor({ state: 'visible' });
+        const moduleContract = await childLink.evaluate((link) => ({
+          name: link.dataset.moduleName,
+          route: link.dataset.moduleRoute,
+          navigationKey: link.dataset.navigationKey,
+          exactView: link.dataset.exactView
+        }));
+        assert.ok(moduleContract.name && moduleContract.route && moduleContract.navigationKey && moduleContract.exactView);
+        await childLink.click();
+        await page.waitForURL((url) => url.pathname === moduleContract.route && url.searchParams.get('navigationKey') === moduleContract.navigationKey && url.searchParams.get('view') === moduleContract.exactView, { timeout: 10_000 });
+        await page.waitForFunction(() => {
+          const frame = document.querySelector('#module-frame');
+          const status = document.querySelector('#module-status');
+          return frame && !frame.hidden && frame.contentDocument?.readyState === 'complete' && status?.hidden;
+        }, { timeout: 15_000 });
+        const renderedContract = await page.frameLocator('#module-frame').locator('body').evaluate((body) => ({
+          module: body.dataset.currentModule,
+          view: body.dataset.currentView,
+          component: body.dataset.currentComponent
+        }));
+        assert.equal(renderedContract.module, moduleContract.navigationKey, `${flow.roleKey} should open the selected module`);
+        assert.equal(renderedContract.view, moduleContract.exactView, `${flow.roleKey} should open the exact selected view`);
         stage = 'verify role-specific API authorization';
         const adminAccess = await page.evaluate(async () => (await fetch('/api/administrators', { credentials: 'same-origin' })).status);
         assert.equal(adminAccess, flow.roleKey === 'PROPRIETOR' ? 200 : 403);
@@ -146,6 +176,7 @@ test('synthetic local staff browser matrix verifies redirects, sessions, RBAC, a
         assert.ok(network.some((event) => event.path === '/api/administrators' && event.status === adminAccess));
         subtest.diagnostic(JSON.stringify({ route: flow.route, role: flow.roleKey, adminApiStatus: adminAccess, sanitizedNetwork: network, consoleErrorCount, pageErrorCount }));
       } catch (error) {
+        subtest.diagnostic(JSON.stringify({ role: flow.roleKey, stage, error: error.message, sanitizedNetwork: network }));
         throw new Error(`Synthetic ${flow.roleKey} browser flow failed while attempting to ${stage}.`, { cause: error });
       } finally {
         await context.close();

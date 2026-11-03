@@ -47,3 +47,10 @@ For an approved, time-limited production session investigation, set `OSAAH_AUTH_
 ## CI release gate
 
 The `Verify protected components` workflow runs `npm run test:auth-regression` and the Playwright synthetic staff-role matrix on pull requests and pushes to `main`. It installs Chromium before running browser regressions. A failed assertion fails the workflow. Repository branch protection must require the `Verify attendance integrity and protected components` job before merge; GitHub repository settings control that requirement and it cannot be established by workflow YAML alone.
+# Role dashboard navigation protection
+
+The school role navigation contract is protected by `school-authentication-login-contract` in `config/protected-components.json`. The protected contract includes sidebar route identity (`navigationKey`), exact view identity, the proprietor route registry, the synthetic browser matrix, the app asset cache version, and bounded iframe loading with an explicit error state.
+
+The browser matrix uses generated local accounts only. For each configured school role it verifies the role landing page, opens that role's first visible sidebar module, checks the URL's navigation and view keys, and confirms the iframe renders the same module and exact view before checking authorization, session restore, and logout. The proprietor's full 160 route mapping also remains covered by the proprietor route tests. Production credentials must only be used through the separately authorized production smoke workflow; they must not be committed into tests, logs, or source.
+
+Run `npm run protection:verify`, `npm run test:auth-regression`, and `OSAAH_RUN_LOCAL_AUTH_BROWSER_TESTS=1 node --test --test-concurrency=1 test/staff-role-auth-browser.test.js` before changing login redirects, sidebar identities, or embedded module navigation.

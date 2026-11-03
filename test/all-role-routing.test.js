@@ -136,6 +136,24 @@ test('workspace navigation normalizes the route inside the renderer and terminat
   assert.match(renderBody, /Unable to open \$\{title\}/);
 });
 
+test('embedded module navigation preserves exact identity, refreshes the shell, and ends stalled loading', async () => {
+  const [app, index, serviceWorker] = await Promise.all([
+    readFile(new URL('../public/app.js', import.meta.url), 'utf8'),
+    readFile(new URL('../public/index.html', import.meta.url), 'utf8'),
+    readFile(new URL('../public/sw.js', import.meta.url), 'utf8')
+  ]);
+  assert.match(app, /data-navigation-key=/);
+  assert.match(app, /data-module-route=/);
+  assert.match(app, /data-exact-view=/);
+  assert.match(app, /url\.searchParams\.set\('navigationKey', navigationKey\)/);
+  assert.match(app, /url\.searchParams\.set\('view', exactView\)/);
+  assert.match(app, /setTimeout\(\(\) => failToOpen\('timeout'\), 20000\)/);
+  assert.match(app, /taking too long to open/);
+  assert.match(app, /clearTimeout\(Number\(dashboard\.dataset\.navigationTimer\)\)/);
+  assert.match(index, /app\.js\?v=20261103-1/);
+  assert.match(serviceWorker, /osaah-shell-v5/);
+});
+
 test('school dashboard bootstrap consumes the server role redirect after login and session restoration', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   const auth = await readFile(new URL('../src/auth.js', import.meta.url), 'utf8');

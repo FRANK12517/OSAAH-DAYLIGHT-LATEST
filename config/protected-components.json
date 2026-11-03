@@ -412,6 +412,20 @@
           ]
         },
         {
+          "path": "public/app.js",
+          "requiredMarkers": [
+            "data-navigation-key=",
+            "data-module-route=",
+            "data-exact-view=",
+            "navigationKey: link.dataset.navigationKey",
+            "exactView: link.dataset.exactView",
+            "url.searchParams.set('navigationKey', navigationKey)",
+            "url.searchParams.set('view', exactView)",
+            "setTimeout(() => failToOpen('timeout'), 20000)",
+            "taking too long to open"
+          ]
+        },
+        {
           "path": "src/auth.js",
           "requiredMarkers": [
             "SCHOOL_PORTAL_DASHBOARDS",
@@ -458,7 +472,44 @@
             "teacher-username",
             "teacher-email",
             "verify session restoration after refresh",
+            "open the first visible role-specific sidebar module",
+            "should open the exact selected view",
             "verify logout"
+          ]
+        },
+        {
+          "path": "test/proprietor-sidebar.test.js",
+          "requiredMarkers": [
+            "every requested proprietor component opens its mapped implementation",
+            "every registered proprietor route is directly renderable and remains server-authorized"
+          ]
+        },
+        {
+          "path": "test/all-role-routing.test.js",
+          "requiredMarkers": [
+            "every configured role sidebar child has a stable identity and deterministic route",
+            "duplicate visible labels remain isolated by navigation identity",
+            "embedded module navigation preserves exact identity, refreshes the shell, and ends stalled loading"
+          ]
+        },
+        {
+          "path": "public/index.html",
+          "requiredMarkers": [
+            "app.js?v=20261103-1"
+          ]
+        },
+        {
+          "path": "public/sw.js",
+          "requiredMarkers": [
+            "osaah-shell-v5"
+          ]
+        },
+        {
+          "path": "docs/authentication-regression-protection.md",
+          "requiredMarkers": [
+            "Role dashboard navigation protection",
+            "opens that role's first visible sidebar module",
+            "must not be committed into tests, logs, or source"
           ]
         },
         {

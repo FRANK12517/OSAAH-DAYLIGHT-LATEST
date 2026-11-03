@@ -100,6 +100,20 @@ test('mixed PostgreSQL and TiDB URLs are rejected without exposing either URL', 
   assert.doesNotMatch(JSON.stringify(result), /sample-password|mysql:\/\/|postgresql:\/\//);
 });
 
+test('standard connection variables override MySQL URL destination while it supplies credentials', async () => {
+  const result = await inspectDatabaseConfiguration({ environment: {
+    DATABASE_URL: 'mysql://sample-user:sample-password@url-host.example.invalid:4000/url_database',
+    HOST: 'tidb-host.example.invalid',
+    PORT: '4100',
+    DATABASE: 'osaahdaylightschool'
+  } });
+  assert.equal(result.configurationStatus, 'CONFIGURATION_VALID');
+  assert.equal(result.selectedDatabase, 'osaahdaylightschool');
+  assert.deepEqual(result.conflicts, []);
+  assert.deepEqual(result.configuredSources, { host: 'HOST', database: 'DATABASE', port: 'PORT' });
+  assert.doesNotMatch(JSON.stringify(result), /sample-password|url-host|tidb-host|url_database/);
+});
+
 test('database readiness detects differing connection overrides without revealing configured values', async () => {
   const result = await inspectDatabaseConfiguration({ environment: tidbEnvironment({
     HOST: 'another-host.example.invalid',

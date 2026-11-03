@@ -142,11 +142,11 @@ export function createDatabaseAdapter({ environment, poolFactory = mysql.createP
     try { return decodeURIComponent(value); }
     catch { throw Object.assign(new Error('DATABASE_URL contains invalid URL encoding.'), { code: 'DATABASE_URL_INVALID' }); }
   };
-  const host = splitConfigurationComplete ? split.host : firstValue(env.TIDB_HOST, url?.hostname, connectionString ? undefined : env.HOST);
+  const host = splitConfigurationComplete ? split.host : firstValue(env.TIDB_HOST, env.HOST, url?.hostname);
   const user = splitConfigurationComplete ? split.user : firstValue(env.TIDB_USER, url?.username ? decode(url.username) : undefined, env.Username, env.USERNAME);
   const password = splitConfigurationComplete ? split.password : firstValue(env.TIDB_PASSWORD, url?.password ? decode(url.password) : undefined, env.Password, env.PASSWORD);
-  const database = splitConfigurationComplete ? split.database : firstValue(env.TIDB_DATABASE, url?.pathname ? decode(url.pathname.slice(1)) : undefined, connectionString ? undefined : env.DATABASE);
-  const portValue = splitConfigurationComplete ? split.port : firstValue(env.TIDB_PORT, url?.port);
+  const database = splitConfigurationComplete ? split.database : firstValue(env.TIDB_DATABASE, env.DATABASE, url?.pathname ? decode(url.pathname.slice(1)) : undefined);
+  const portValue = splitConfigurationComplete ? split.port : firstValue(env.TIDB_PORT, env.PORT, url?.port);
   const port = portValue ? Number(portValue) : 3306;
   if (!host || !user || !password || !database || !Number.isInteger(port) || port < 1 || port > 65535) {
     throw Object.assign(new Error('TiDB configuration requires a database URL or valid host, port, database, user, and password settings.'), { code: 'DATABASE_CONFIGURATION_INVALID' });

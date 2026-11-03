@@ -1,4 +1,4 @@
-const CACHE = 'osaah-shell-v4';
+const CACHE = 'osaah-shell-v5';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest', '/assets/osaah-daylight-logo.png'];
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('osaah-shell-') && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())));

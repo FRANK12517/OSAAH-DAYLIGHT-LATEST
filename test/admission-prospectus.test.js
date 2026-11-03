@@ -87,8 +87,8 @@ test('parent portal exposes prospectus below online admission and produces brand
   assert.match(index, /Online Admission<\/a><a class="admission-button" href="\/parent\/admission-prospectus">Admission Prospectus/);
   assert.doesNotMatch(index, /parent-admission-actions[^>]*hidden/);
   assert.doesNotMatch(app, /parent-admission-actions/);
-  assert.match(index, /app\.js\?v=20260913-3/);
-  assert.match(serviceWorker, /osaah-shell-v4/);
+  assert.match(index, /app\.js\?v=\d{8}-\d+/);
+  assert.match(serviceWorker, /osaah-shell-v\d+/);
   assert.match(serviceWorker, /caches\.delete/);
   assert.match(page, /Export Branded PDF/);
   assert.match(page, /\/api\/public\/admission-prospectus/);
