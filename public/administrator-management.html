@@ -11,7 +11,7 @@
     <a class="text-button" href="/">← Dashboard</a>
     <p class="eyebrow">ADMINISTRATIVE</p>
     <h1>Administrator Management</h1>
-    <p class="muted">Assign and manage School Administrators. Temporary credentials are shown only once after creation.</p>
+    <p class="muted">Assign and manage School Administrators. Credentials are shown once after creation; use the administrator email as the username.</p>
 
     <section class="card">
       <h2>Assign School Administrator</h2>
@@ -25,8 +25,8 @@
         <label for="administrator-phone">Phone Number
           <input id="administrator-phone" name="phone" type="tel" autocomplete="tel">
         </label>
-        <label for="administrator-email">Email Address
-          <input id="administrator-email" name="email" type="email" autocomplete="email">
+        <label for="administrator-email">Email Address<span aria-hidden="true"> *</span>
+          <input id="administrator-email" name="email" type="email" autocomplete="email" required aria-describedby="administrator-result">
         </label>
         <label for="administrator-assigned-at">Date Assigned
           <input id="administrator-assigned-at" name="assignedAt" type="date">
@@ -87,7 +87,7 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const required = [['fullName', 'Enter the administrator’s full name.'], ['staffId', 'Enter the administrator’s Staff ID.']];
+      const required = [['fullName', 'Enter the administrator’s full name.'], ['staffId', 'Enter the administrator’s Staff ID.'], ['email', 'Enter the administrator’s email address.']];
       for (const [name, message] of required) {
         const field = form.elements[name];
         field.setCustomValidity('');
@@ -100,8 +100,8 @@
         }
       }
       const email = form.elements.email;
-      if (email.value && !email.validity.valid) {
-        result.textContent = 'Enter a valid email address or leave it blank.';
+      if (!email.validity.valid) {
+        result.textContent = 'Enter a valid email address.';
         email.reportValidity();
         email.focus();
         return;
@@ -118,7 +118,7 @@
           result.textContent = data.error ?? 'Unable to assign administrator.';
           return;
         }
-        result.textContent = `Username: ${data.administrator.username} · Temporary password: ${data.temporaryPassword} · Share securely and require a password change.`;
+        result.textContent = `Username: ${data.administrator.username} · Temporary password: ${data.temporaryPassword} · Share securely; this password is shown only once.`;
         form.reset();
         await load();
       } catch {
