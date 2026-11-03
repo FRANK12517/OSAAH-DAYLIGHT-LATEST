@@ -9,10 +9,10 @@ import { createApp } from '../src/server.mjs';
 
 const schoolId = 'school-osaah-daylight';
 const passwords = Object.freeze({
-  accountant: 'Accountant123!',
-  administrator: 'Administrator123!',
-  headteacher: 'Headteacher123!',
-  assistant: 'Assistant123!'
+  accountant: 'SyntheticAccountant123!',
+  administrator: 'SyntheticAdministrator123!',
+  headteacher: 'SyntheticHeadteacher123!',
+  assistant: 'SyntheticAssistant123!'
 });
 const accounts = [
   ['db-accountant', 'accountant@osaah.edu.gh', passwords.accountant, 'ACCOUNTANT_BURSAR', '/fees', ['fees.read', 'fees.write', 'finance.read']],
