@@ -61,6 +61,7 @@ import { createAdmissionEnrollmentService } from './admission-enrollment.js';
 import { createExistingStudentLinkingService } from './existing-student-linking.js';
 import { assessAdmissionFees } from './admission-fee-assessment.js';
 import { createDurableAdmissionsService } from './durable-admissions.js';
+import { inspectAdmissionSchema } from './admission-schema-diagnostic.js';
 import { createAdmissionDocumentStorage, createVercelPrivateBlobProvider } from './admission-document-storage.js';
 import { createDurableStudentProfileService } from './durable-student-profile.js';
 import { createDurableAcademicService } from './durable-academic.js';
@@ -622,6 +623,11 @@ export function createApp({ auth = null, parentSmsAuth = null, students = null, 
           if (activityId && request.method === 'PATCH' && canAccess(user, SPORTING_PERMISSIONS.update)) { const result = sportingActivities.updateActivity(activityId, await readJson(request), actor); audit(createAuditLog({ schoolId: user.schoolId, userId: user.id, action: 'SPORTING_ACTIVITY_UPDATED', entity: 'SportingActivity', entityId: result.id, newValue: result })); return json(response, result); }
         } catch (error) { return json(response, { error: error.message }, error.message === 'Forbidden.' ? 403 : 400); }
         return json(response, { error: 'Not found.' }, 404);
+      }
+      if (pathname === '/api/admin/admissions/schema-diagnostic' && request.method === 'GET') {
+        if (user.portal !== 'school' || canonicalRoleKey(user.roleKey) !== 'PROPRIETOR') return json(response, { error: 'Forbidden.' }, 403);
+        try { return json(response, await inspectAdmissionSchema(database)); }
+        catch (error) { return json(response, { error: 'ADMISSION_SCHEMA_DIAGNOSTIC_UNAVAILABLE', code: /^[A-Z0-9_]+$/.test(String(error?.code ?? '')) ? error.code : 'UNKNOWN' }, 503); }
       }
       if (pathname === '/api/admission-applications' && request.method === 'GET') { if (user.portal !== 'parent' && !canAccess(user, 'admissions.read')) return json(response, { error: 'Forbidden.' }, 403); const filters = Object.fromEntries(new URL(request.url, 'http://localhost').searchParams); const applications = durableAdmissions ? await durableAdmissions.listApplications(filters, user) : admissionForms.listApplications(filters, user); return json(response, { applications: applications.map(presentAdmissionApplication) }); }
       if (pathname === '/api/admission-analytics' && request.method === 'GET') { if (user.portal !== 'school' || !canAccess(user, 'admissions.analytics.read')) return json(response, { error: 'Forbidden.' }, 403); const query = Object.fromEntries(new URL(request.url, 'http://localhost').searchParams); return json(response, admissionForms.admissionAnalytics(query, user, { invoices: fees.listInvoices(), payments: fees.listPayments() })); }

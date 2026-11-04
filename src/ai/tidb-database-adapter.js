@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
+import { TIDB_PRODUCTION_DATABASE } from './tidb-constants.js';
 
-export const TIDB_PRODUCTION_DATABASE = 'osaahdaylightschool';
+export { TIDB_PRODUCTION_DATABASE } from './tidb-constants.js';
 
 const schemaMigrationDdl = `CREATE TABLE IF NOT EXISTS schema_migrations (
   version INT PRIMARY KEY,
