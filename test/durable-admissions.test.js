@@ -10,6 +10,7 @@ function databaseWithoutEnquiryRequestColumn() {
     calls,
     async query(sql, params = []) {
       calls.push({ type: 'query', sql, params });
+      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
       if (sql.includes('information_schema.COLUMNS')) return [
         'id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'
       ].map((columnName) => ({ columnName }));
@@ -42,11 +43,28 @@ test('durable admission drafts persist and retry safely when production lacks en
   const retried = await service.createApplication(input, actor);
   assert.equal(retried.applicationNumber, created.applicationNumber);
   assert.equal(database.rowsById.size, 1);
+  assert.ok(database.calls.some((call) => call.sql === 'SELECT id,name FROM classes WHERE school_id=?'));
   assert.match(created.id, /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   const insert = database.calls.find((call) => call.type === 'execute');
   assert.doesNotMatch(insert.sql, /enquiry_request_id/);
   assert.equal(JSON.parse(insert.params[columnsFromInsert(insert.sql).indexOf('applicant_data')]).enquiryRequestId, input.enquiryRequestId);
   assert.equal(database.calls.some((call) => /enquiry_request_id/.test(call.sql)), false);
+});
+
+test('class lookup supports legacy class catalogs scoped through levels when classes.school_id is absent', async () => {
+  const database = databaseWithoutEnquiryRequestColumn();
+  database.query = async function(sql, params = []) {
+    this.calls.push({ type: 'query', sql, params });
+    if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'level_id', 'status'].map((columnName) => ({ columnName }));
+    if (sql.includes('information_schema.COLUMNS')) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+    if (sql.startsWith('SELECT c.id,c.name FROM classes c')) return [{ id: 'class-basic-1', name: 'Basic 1' }];
+    if (sql.includes('WHERE id=? AND school_id=?')) return [this.rowsById.get(params[0])].filter(Boolean);
+    if (sql.includes('WHERE school_id=? AND application_number=?')) return [...this.rowsById.values()].filter((row) => row.school_id === params[0] && row.application_number === params[1]);
+    throw new Error(`Unexpected query: ${sql}`);
+  };
+  const service = createDurableAdmissionsService({ database, schoolId: 'school-osaah-daylight' });
+  await service.createApplication({ studentFirstName: 'Demo', studentSurname: 'Student', classAppliedFor: 'Basic 1' }, { id: 'p1', roleKey: 'PROPRIETOR', portal: 'school', schoolId: 'school-osaah-daylight' });
+  assert.ok(database.calls.some((call) => call.sql === "SELECT c.id,c.name FROM classes c JOIN levels l ON l.id=c.level_id WHERE l.school_id=? AND c.status='ACTIVE'"));
 });
 
 function columnsFromInsert(sql) {

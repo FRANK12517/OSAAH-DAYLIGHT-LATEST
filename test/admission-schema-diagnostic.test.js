@@ -15,10 +15,12 @@ test('admission schema diagnostic checks TiDB identity, required columns, indexe
       if (sql.includes('information_schema.COLUMNS')) return [
         { tableName: 'admission_applications', columnName: 'student_id' },
         { tableName: 'student_enrollments', columnName: 'student_id' },
+        { tableName: 'classes', columnName: 'id' },
+        { tableName: 'classes', columnName: 'name' },
       ];
       if (sql.includes('information_schema.STATISTICS')) return [];
-      if (sql.includes('information_schema.TABLES')) return [{ tableName: 'admission_applications' }, { tableName: 'schema_migrations' }];
-      if (sql.includes('FROM schema_migrations')) return [];
+      if (sql.includes('information_schema.TABLES')) return [{ tableName: 'admission_applications' }, { tableName: 'schema_migrations' }, { tableName: 'classes' }, { tableName: 'levels' }];
+      if (sql.includes('FROM schema_migrations')) return [{ version: 31 }, { version: 38 }];
       throw new Error(`Unexpected diagnostic query: ${sql}`);
     },
   };
@@ -30,10 +32,14 @@ test('admission schema diagnostic checks TiDB identity, required columns, indexe
   assert.equal(report.admissionColumns.enquiryRequestId, false);
   assert.equal(report.admissionColumns.studentId, true);
   assert.equal(report.enquiryRequestUniqueIndex, false);
+  assert.equal(report.classTablePresent, true);
+  assert.equal(report.classColumns.status, false);
+  assert.equal(report.migration031Recorded, true);
+  assert.equal(report.migration038Recorded, true);
   assert.equal(report.migration078Recorded, false);
   assert.equal(Object.hasOwn(report, 'databaseName'), false);
   assert.ok(statements.every(({ sql }) => !/\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i.test(sql)));
-  assert.deepEqual(statements.at(-1).params, [78]);
+  assert.deepEqual(statements.at(-1).params, [31, 38, 78]);
 });
 
 test('admission schema diagnostic refuses a non-TiDB database', async () => {

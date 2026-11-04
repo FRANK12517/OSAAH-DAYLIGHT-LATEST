@@ -42,10 +42,16 @@ function payload(record) { return { ...record.section1, ...record.section2, ...r
 export function createDurableAdmissionsService({ database, schoolId, clock = () => new Date().toISOString(), idFactory = randomUUID } = {}) {
   if (!database?.query || !database?.execute) return null;
   let applicationColumnsPromise;
+  let classColumnsPromise;
   async function applicationColumns() {
     applicationColumnsPromise ??= database.query("SELECT COLUMN_NAME AS columnName FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='admission_applications'")
       .then((result) => new Set(rows(result).map((row) => String(row.columnName ?? row.COLUMN_NAME ?? '').toLowerCase())));
     return applicationColumnsPromise;
+  }
+  async function classColumns() {
+    classColumnsPromise ??= database.query("SELECT COLUMN_NAME AS columnName FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='classes'")
+      .then((result) => new Set(rows(result).map((row) => String(row.columnName ?? row.COLUMN_NAME ?? '').toLowerCase())));
+    return classColumnsPromise;
   }
   async function existingEnquiry(school, requestId, columns) {
     if (columns.has('enquiry_request_id')) {
@@ -66,7 +72,17 @@ export function createDurableAdmissionsService({ database, schoolId, clock = () 
   async function resolveClass(value, actor) {
     const requested = String(value ?? '').trim();
     if (!requested) fail('A requested class is required.');
-    const classes = rows(await database.query("SELECT id,name FROM classes WHERE school_id=? AND status='ACTIVE'", [actor.schoolId ?? schoolId]));
+    const columns = await classColumns();
+    const school = actor.schoolId ?? schoolId;
+    let sql;
+    if (columns.has('school_id')) {
+      sql = `SELECT id,name FROM classes WHERE school_id=?${columns.has('status') ? " AND status='ACTIVE'" : ''}`;
+    } else if (columns.has('level_id')) {
+      sql = `SELECT c.id,c.name FROM classes c JOIN levels l ON l.id=c.level_id WHERE l.school_id=?${columns.has('status') ? " AND c.status='ACTIVE'" : ''}`;
+    } else {
+      fail('The school class catalog is missing a school-scoped class relationship.', 503);
+    }
+    const classes = rows(await database.query(sql, [school]));
     const match = classes.find((item) => String(item.id) === requested || String(item.name) === requested || canonicalClassId(item.name) === canonicalClassId(requested));
     if (!match || !canonicalClassId(match.name)) fail('Select a valid active school class.');
     return match;
