@@ -13,7 +13,7 @@ const navigation = await readFile(new URL('../public/admission-form-navigation.j
 
 test('Next validates the enquiry, prevents duplicate requests, and opens the official application form', () => {
   assert.match(page, /id="admission-enquiry"/);
-  assert.match(page, />Continue to application<\/button>/);
+  assert.match(page, />Next<\/button>/);
   assert.doesNotMatch(page, /Start Application/);
   assert.match(workflow, /normalizeGhanaPhone/);
   assert.match(workflow, /enquiryRequestId/);

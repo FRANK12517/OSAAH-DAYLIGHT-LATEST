@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { normalizeGhanaPhone } from './ghana-phone.js';
 import { canonicalClassId } from './student-classes.js';
 
@@ -7,6 +7,13 @@ const rows = (value) => Array.isArray(value) ? value : [];
 const pick = (...items) => items.find((item) => item !== undefined && item !== null && item !== '') ?? null;
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
 const STAFF_ADMISSION_TYPES = new Set(['ALREADY_ENROLLED', 'TRANSFER', 'FIRST_TIME']);
+function stableApplicationId(schoolId, requestId) {
+  const bytes = createHash('sha256').update(`${schoolId}\0${requestId}`).digest().subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 function staffAdmissionType(value) {
   const type = String(value ?? '').trim().toUpperCase().replace(/[ -]+/g, '_');
   const aliases = { ENROLLED: 'ALREADY_ENROLLED', ENROLLED_STUDENT: 'ALREADY_ENROLLED', TRANSFER_STUDENT: 'TRANSFER', FIRST_TIME_STUDENT: 'FIRST_TIME' };
@@ -34,6 +41,18 @@ function payload(record) { return { ...record.section1, ...record.section2, ...r
 
 export function createDurableAdmissionsService({ database, schoolId, clock = () => new Date().toISOString(), idFactory = randomUUID } = {}) {
   if (!database?.query || !database?.execute) return null;
+  let applicationColumnsPromise;
+  async function applicationColumns() {
+    applicationColumnsPromise ??= database.query("SELECT COLUMN_NAME AS columnName FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='admission_applications'")
+      .then((result) => new Set(rows(result).map((row) => String(row.columnName ?? row.COLUMN_NAME ?? '').toLowerCase())));
+    return applicationColumnsPromise;
+  }
+  async function existingEnquiry(school, requestId, columns) {
+    if (columns.has('enquiry_request_id')) {
+      return rows(await database.query('SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1', [school, requestId]))[0] ?? null;
+    }
+    return rows(await database.query('SELECT * FROM admission_applications WHERE id=? AND school_id=? LIMIT 1', [stableApplicationId(school, requestId), school]))[0] ?? null;
+  }
   async function load(applicationNumber, actor) {
     const row = rows(await database.query('SELECT * FROM admission_applications WHERE school_id=? AND application_number=? LIMIT 1', [actor.schoolId ?? schoolId, applicationNumber]))[0];
     if (!row) return null;
@@ -56,22 +75,26 @@ export function createDurableAdmissionsService({ database, schoolId, clock = () 
     if (!input?.studentSurname || !input?.studentFirstName || !input?.classAppliedFor) fail('Candidate name and a valid class are required.');
     const requestId = String(input.enquiryRequestId ?? '').trim();
     if (requestId && !/^[a-zA-Z0-9-]{16,64}$/.test(requestId)) fail('Enquiry request reference is invalid.');
+    const recordSchoolId = actor.schoolId ?? schoolId;
+    const columns = await applicationColumns();
     if (requestId) {
-      const existing = rows(await database.query('SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1', [actor.schoolId ?? schoolId, requestId]))[0];
+      const existing = await existingEnquiry(recordSchoolId, requestId, columns);
       if (existing) { const record = await load(existing.application_number, actor); if (!record) fail('Application not found.', 404); return record; }
     }
     const selectedClass = await resolveClass(input.classAppliedFor, actor);
-    const now = clock(); const applicationNumber = await nextNumber(); const id = idFactory();
+    const now = clock(); const applicationNumber = await nextNumber(); const id = requestId ? stableApplicationId(recordSchoolId, requestId) : idFactory();
     let primaryPhone = input.primaryGuardianPrimaryPhone;
     if (primaryPhone) { try { primaryPhone = normalizeGhanaPhone(primaryPhone); } catch (error) { fail(error.message); } }
     input = { ...input, classAppliedFor: selectedClass.id, className: selectedClass.name, ...(primaryPhone ? { primaryGuardianPrimaryPhone: primaryPhone } : {}) };
     input.admissionYear ??= String(input.academicYear ?? '').match(/^\d{4}/)?.[0] ?? null;
-    const record = { id, schoolId: actor.schoolId ?? schoolId, applicationNumber, academicYear: input.academicYear ?? null, admissionTerm: input.admissionTerm ?? null, applicationDate: input.applicationDate ?? now.slice(0, 10), status: 'DRAFT', parentUserId: actor.portal === 'parent' ? actor.id : input.parentUserId ?? null, section1: { ...input }, section2: { ...input }, section3: { ...input }, parentDeclarationAccepted: false, parentSignatureReference: null, parentDeclarationDate: null, officialUse: { entranceAssessmentScore: null, classAssigned: null, admissionGranted: null, permanentStudentId: null, studentId: null, reviewerId: null, reviewerRole: null, reviewedAt: null }, feeSnapshot: null, workflow: { currentStage: 'APPLICATION', completedStages: ['ENQUIRY', 'APPLICATION'], offer: null }, createdAt: now, updatedAt: now };
+    const record = { id, schoolId: recordSchoolId, applicationNumber, academicYear: input.academicYear ?? null, admissionTerm: input.admissionTerm ?? null, applicationDate: input.applicationDate ?? now.slice(0, 10), status: 'DRAFT', parentUserId: actor.portal === 'parent' ? actor.id : input.parentUserId ?? null, section1: { ...input }, section2: { ...input }, section3: { ...input }, parentDeclarationAccepted: false, parentSignatureReference: null, parentDeclarationDate: null, officialUse: { entranceAssessmentScore: null, classAssigned: null, admissionGranted: null, permanentStudentId: null, studentId: null, reviewerId: null, reviewerRole: null, reviewedAt: null }, feeSnapshot: null, workflow: { currentStage: 'APPLICATION', completedStages: ['ENQUIRY', 'APPLICATION'], offer: null }, createdAt: now, updatedAt: now };
     try {
-      await database.execute('INSERT INTO admission_applications (id,school_id,application_number,enquiry_request_id,stage,applicant_data,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)', [id, record.schoolId, applicationNumber, requestId || null, 'DRAFT', JSON.stringify(payload(record)), now, now]);
+      const insertColumns = ['id', 'school_id', 'application_number', ...(columns.has('enquiry_request_id') ? ['enquiry_request_id'] : []), 'stage', 'applicant_data', 'created_at', 'updated_at'];
+      const insertValues = [id, record.schoolId, applicationNumber, ...(columns.has('enquiry_request_id') ? [requestId || null] : []), 'DRAFT', JSON.stringify(payload(record)), now, now];
+      await database.execute(`INSERT INTO admission_applications (${insertColumns.join(',')}) VALUES (${insertColumns.map(() => '?').join(',')})`, insertValues);
     } catch (error) {
       if (!requestId) throw error;
-      const existing = rows(await database.query('SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1', [record.schoolId, requestId]))[0];
+      const existing = await existingEnquiry(record.schoolId, requestId, columns);
       if (!existing) throw error;
       const recovered = await load(existing.application_number, actor); if (!recovered) fail('Application not found.', 404); return recovered;
     }
