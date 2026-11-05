@@ -7,7 +7,9 @@ function database() {
   return {
     state,
     async query(sql, params = []) {
-      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1' }];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='classes'")) return [{ columnName: 'school_id' }, { columnName: 'status' }];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='admission_applications'")) return [{ columnName: 'enquiry_request_id' }];
+      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1', school_id: 'school-1', status: 'ACTIVE' }];
       if (sql.includes('FROM admission_applications')) return state.row && state.row.school_id === params[0] && (sql.includes('enquiry_request_id=?') ? state.row.enquiry_request_id : state.row.application_number) === params[1] ? [{ ...state.row }] : [];
       return [];
     },

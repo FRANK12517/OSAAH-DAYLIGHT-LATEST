@@ -1,5 +1,6 @@
 import { CORE_LEVELS } from './students.js';
 import { GES_ASSESSMENT_LIBRARIES } from './ges-assessment-libraries.js';
+import { SAMPLE_STUDENT_IDS } from './sample-student-identities.js';
 
 const SAMPLE_CLASSES = Object.freeze([...CORE_LEVELS]);
 const SAMPLE_MOCK_CLASSES = Object.freeze(['JHS 1', 'JHS 2', 'JHS 3']);
@@ -15,7 +16,7 @@ function assertActor(actor, permission = 'marks.write') { if (!actor?.schoolId |
 export function createSampleResultWorkflow({ students, subjects, academicResults, schoolId = 'school-osaah-daylight', now = () => new Date().toISOString() } = {}) {
   if (!students || !subjects || !academicResults) throw new Error('Sample workflow dependencies are required.');
   const sampleState = new Map();
-  function sampleStudents(classId) { return students.listStudents({ requestedSchoolId: schoolId, includeTestRecords: true }).filter((student) => student.isTestRecord && (!classId || !student.classId || student.classId === classId)); }
+  function sampleStudents(classId) { return students.listStudents({ requestedSchoolId: schoolId, includeTestRecords: true }).filter((student) => student.isTestRecord && SAMPLE_STUDENT_IDS.includes(student.permanentStudentId) && (!classId || !student.classId || student.classId === classId)); }
   function generate(input, actor) {
     assertActor(actor); if (actor.schoolId !== schoolId) throw new Error('Forbidden.');
     const academicYear = String(input?.academicYear ?? '').trim(); const term = String(input?.term ?? '').trim(); const examinationType = String(input?.examinationType ?? 'TERMINAL').trim(); const classId = String(input?.classId ?? '').trim();
@@ -63,7 +64,24 @@ export function createSampleResultWorkflow({ students, subjects, academicResults
     return academicResults.saveResult({ ...input, studentId: target.id, permanentStudentId: target.permanentStudentId, isSample: true }, actor);
   }
   function publish(input, actor) { assertActor(actor); const target = (students.getStudent(input.studentId, { requestedSchoolId: schoolId })?.isTestRecord ? students.getStudent(input.studentId, { requestedSchoolId: schoolId }) : students.findByPermanentStudentId(input.permanentStudentId, { roleKey: actor.roleKey, requestedSchoolId: schoolId })); if (!target?.isTestRecord) throw new Error('Only existing sample records can be published through the sample workflow.'); return academicResults.publishResults({ ...input, studentId: target.id, isSample: true }, actor); }
-  return { classes: () => [...SAMPLE_CLASSES], mockClasses: () => [...SAMPLE_MOCK_CLASSES], students: sampleStudents, generate, generateMock, saveMock, state, publish, reset, resetMock };
+  function broadsheet(input, actor, { mock = false } = {}) {
+    if (actor?.schoolId !== schoolId || !(actor?.permissions?.has?.('results.read') || actor?.permissions?.has?.('mock.results.read') || actor?.permissions?.has?.('*') || ['PROPRIETOR', 'SCHOOL_ADMIN', 'HEADTEACHER'].includes(actor?.roleKey))) throw new Error('Forbidden.');
+    const classId = String(input?.classId ?? '').trim();
+    if (!(mock ? SAMPLE_MOCK_CLASSES : SAMPLE_CLASSES).includes(classId)) throw new Error('A configured sample class is required.');
+    students.seedSampleStudents?.();
+    const reader = { ...actor, permissions: new Set([...(actor.permissions ?? []), 'results.generate', 'mock.results.generate', 'marks.write', 'mock.scores.write']) };
+    return sampleStudents(classId).map((student) => {
+      const report = mock
+        ? generateMock({ ...input, classId, studentId: student.id }, reader)
+        : generate({ ...input, classId, studentId: student.id }, reader);
+      const subjectCas = Object.fromEntries((report.subjects ?? []).map((row) => [row.subjectName || row.subjectId, row.caScore]));
+      const subjectExams = Object.fromEntries((report.subjects ?? []).map((row) => [row.subjectName || row.subjectId, row.examScore]));
+      const subjectTotals = Object.fromEntries((report.subjects ?? []).map((row) => [row.subjectName || row.subjectId, row.totalScore]));
+      const subjectGrades = Object.fromEntries((report.subjects ?? []).map((row) => [row.subjectName || row.subjectId, row.grade]));
+      return { studentId: student.id, permanentStudentId: student.permanentStudentId, studentName: report.studentName, classId, subjectCas, subjectExams, subjectTotals, subjectGrades, totalScore: report.totalScore, averageScore: report.average, aggregate: report.aggregate ?? null, classPosition: report.classPosition ?? report.position ?? null, subjectsSat: report.subjectsSat ?? report.subjects?.length ?? 0, isSample: true };
+    });
+  }
+  return { classes: () => [...SAMPLE_CLASSES], mockClasses: () => [...SAMPLE_MOCK_CLASSES], students: sampleStudents, generate, generateMock, saveMock, state, publish, reset, resetMock, broadsheet };
 }
 function fiftyFive(key, field) { return 55 + (hash(`${key}:${field}`) % 6); }
 export { ASSESSMENT_KEYS };

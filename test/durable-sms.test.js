@@ -9,7 +9,7 @@ const records = [
   { parentId: 'p1', parentName: 'parent.one', telephone: '024 123 4567', studentId: 's1', permanentStudentId: 'STU-1', className: 'Primary 1' },
   { parentId: 'p1', parentName: 'parent.one', telephone: '+233241234567', studentId: 's2', permanentStudentId: 'STU-2', className: 'Primary 2' },
   { parentId: 'p2', parentName: 'parent.two', telephone: '0551234567', studentId: 's3', permanentStudentId: 'STU-3', className: 'JHS 1' },
-  { parentId: 'user-test-parent-sample', parentName: 'test', telephone: '+233247293733', studentId: 'test-student', permanentStudentId: 'OSAAH-DEMO-001', className: 'Primary 1' }
+  { parentId: 'user-test-parent-sample', parentName: 'test', telephone: '+233247293733', studentId: 'test-student', permanentStudentId: 'OSAAH/DEMO/001', className: 'Primary 1' }
 ];
 function mockDb() {
   const executed = [];

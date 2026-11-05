@@ -1,7 +1,8 @@
 import { normalizeGhanaPhone } from './ghana-phone.js';
+import { isSampleStudentId, SAMPLE_STUDENT_IDS } from './sample-student-identities.js';
 
 export const TEST_PARENT_PHONE = '+233247293733';
-export const TEST_PARENT_STUDENT_IDS = Object.freeze(['OSAAH-DEMO-001', 'OSAAH-DEMO-002']);
+export const TEST_PARENT_STUDENT_IDS = SAMPLE_STUDENT_IDS;
 export const TEST_PARENT_ID = 'user-test-parent-sample';
 export const TEST_PARENT_SCHOOL_ID = 'school-osaah-daylight';
 
@@ -26,7 +27,7 @@ export function isConfiguredTestParentPhone(value) {
 }
 
 export function isConfiguredTestStudentId(value) {
-  return TEST_PARENT_STUDENT_IDS.includes(String(value ?? '').trim());
+  return isSampleStudentId(value);
 }
 
 export function isConfiguredTestParentActor(actor, schoolId = TEST_PARENT_SCHOOL_ID) {

@@ -16,7 +16,9 @@ test('all three leadership sessions can open Admissions and save/reopen a durabl
   const applications = [];
   const database = {
     async query(sql, params = []) {
-      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId }];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='classes'")) return [{ columnName: 'school_id' }, { columnName: 'status' }];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='admission_applications'")) return [{ columnName: 'enquiry_request_id' }];
+      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId, status: 'ACTIVE' }];
       if (sql.includes('FROM admission_applications')) return applications.filter((row) => row.school_id === params[0] && (!sql.includes('application_number=?') || row.application_number === params[1]) && (!sql.includes('enquiry_request_id=?') || row.enquiry_request_id === params[1]));
       return [];
     },
