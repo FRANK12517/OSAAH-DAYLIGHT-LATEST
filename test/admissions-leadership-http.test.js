@@ -16,12 +16,21 @@ test('all three leadership sessions can open Admissions and save/reopen a durabl
   const applications = [];
   const database = {
     async query(sql, params = []) {
-      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId }];
-      if (sql.includes('FROM admission_applications')) return applications.filter((row) => row.school_id === params[0] && (!sql.includes('application_number=?') || row.application_number === params[1]) && (!sql.includes('enquiry_request_id=?') || row.enquiry_request_id === params[1]));
+      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
+      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+      if (sql.includes('FROM classes')) return params[0] === leader.schoolId ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId }] : [];
+      if (sql.includes('FROM admission_applications')) {
+        if (sql.includes('WHERE id=? AND school_id=?')) return applications.filter((row) => row.id === params[0] && row.school_id === params[1]);
+        if (sql.includes('WHERE school_id=? AND application_number=?')) return applications.filter((row) => row.school_id === params[0] && row.application_number === params[1]);
+        return applications.filter((row) => row.school_id === params[0]);
+      }
       return [];
     },
     async execute(sql, params = []) {
-      if (sql.startsWith('INSERT INTO admission_applications')) applications.push({ id: params[0], school_id: params[1], application_number: params[2], enquiry_request_id: params[3], stage: params[4], applicant_data: params[5], created_at: params[6], updated_at: params[7] });
+      if (sql.startsWith('INSERT INTO admission_applications')) {
+        const columns = /INSERT INTO admission_applications \(([^)]+)\)/.exec(sql)[1].split(',');
+        applications.push(Object.fromEntries(columns.map((column, index) => [column, params[index]])));
+      }
       if (sql.startsWith('UPDATE admission_applications SET applicant_data=?')) {
         const row = applications.find((item) => item.application_number === params.at(-1));
         row.applicant_data = params[0]; row.updated_at = params[1];

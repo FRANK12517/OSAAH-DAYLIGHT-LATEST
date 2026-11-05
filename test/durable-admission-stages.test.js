@@ -7,14 +7,21 @@ function database() {
   return {
     state,
     async query(sql, params = []) {
-      if (sql.includes('FROM classes')) return [{ id: 'class-jhs1', name: 'JHS 1' }];
-      if (sql.includes('FROM admission_applications')) return state.row && state.row.school_id === params[0] && (sql.includes('enquiry_request_id=?') ? state.row.enquiry_request_id : state.row.application_number) === params[1] ? [{ ...state.row }] : [];
+      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
+      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+      if (sql.includes('FROM classes')) return params[0] === 'school-1' ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: 'school-1' }] : [];
+      if (sql.includes('FROM admission_applications')) {
+        if (sql.includes('WHERE id=? AND school_id=?')) return state.row?.id === params[0] && state.row?.school_id === params[1] ? [{ ...state.row }] : [];
+        if (sql.includes('WHERE school_id=? AND application_number=?')) return state.row?.school_id === params[0] && state.row?.application_number === params[1] ? [{ ...state.row }] : [];
+        return [];
+      }
       return [];
     },
     async execute(sql, params = []) {
       state.writes.push(sql);
       if (sql.startsWith('INSERT INTO admission_applications')) {
-        state.row = { id: params[0], school_id: params[1], application_number: params[2], enquiry_request_id: params[3], stage: params[4], applicant_data: params[5], created_at: params[6], updated_at: params[7] };
+        const columns = /INSERT INTO admission_applications \(([^)]+)\)/.exec(sql)[1].split(',');
+        state.row = Object.fromEntries(columns.map((column, index) => [column, params[index]]));
       } else if (sql.startsWith('UPDATE admission_applications SET stage=?')) {
         state.row.stage = params[0]; state.row.applicant_data = params[1]; state.row.updated_at = params[2];
       } else if (sql.startsWith('UPDATE admission_applications SET applicant_data=?')) {
