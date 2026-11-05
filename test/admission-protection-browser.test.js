@@ -129,7 +129,7 @@ test('authorized staff can continue through the normal workflow to the applicati
   assert.ok(academicYearValue);
   await admission.locator('[name="academicYear"]').selectOption(academicYearValue);
   await admission.locator('[name="term"]').selectOption({ label: '1st Term' });
-  await admission.getByRole('button', { name: 'Continue to application' }).click({ force: true });
+  await admission.getByRole('button', { name: 'Next' }).click({ force: true });
   await page.frameLocator('#module-frame').getByRole('heading', { name: 'OFFICIAL ADMISSION FORM' }).waitFor();
   assert.equal(applicationWrites.length, 1, 'the normal UI sends one authorized enquiry request');
   assert.equal(applicationWrites[0].method, 'POST');

@@ -137,7 +137,7 @@ test('durable Sample Mode accepts production year, term, class, and subject IDs 
   const context = { academicYearId: 'ay_2026_01', termId: 'term_2026_01', classId: 'class_bs4_01', subjectId: 'subj_math' };
   const sampleRoster = await service.sampleScoreEntryRoster(context, teacher);
   assert.equal(sampleRoster.length, 1);
-  assert.equal(sampleRoster[0].permanentStudentId, 'OSAAH-DEMO-001');
+  assert.equal(sampleRoster[0].permanentStudentId, 'OSAAH/DEMO/001');
   assert.equal(sampleRoster[0].isTestRecord, true);
   assert.equal(sampleRoster[0].classId, 'class_bs4_01');
   assert.equal(sampleRoster[0].saved, false);
@@ -365,8 +365,10 @@ test('Result-student roster retries legacy enrollment and student columns withou
   assert.match(attempts[0], /enrollment_status/);
   assert.doesNotMatch(attempts[1], /enrollment_status|is_current/);
   assert.match(attempts[2], /permanent_student_id NOT LIKE 'OSAAH-DEMO-%'/);
+  assert.match(attempts[2], /permanent_student_id NOT LIKE 'OSAAH\/DEMO\/%'/);
   assert.doesNotMatch(attempts[3], /student_status/);
   assert.match(attempts[3], /permanent_student_id NOT LIKE 'OSAAH-DEMO-%'/);
+  assert.match(attempts[3], /permanent_student_id NOT LIKE 'OSAAH\/DEMO\/%'/);
 });
 
 test('Score Entry roster falls back when production enrollment status columns are absent', async () => {
@@ -421,6 +423,7 @@ test('Score Entry roster falls back to permanent-ID sample exclusion when studen
   assert.equal(rosterQueries.length, 2);
   assert.match(rosterQueries[0].sql, /s\.is_test_record IS NOT TRUE/);
   assert.match(rosterQueries[1].sql, /s\.permanent_student_id NOT LIKE 'OSAAH-DEMO-%'/);
+  assert.match(rosterQueries[1].sql, /s\.permanent_student_id NOT LIKE 'OSAAH\/DEMO\/%'/);
   assert.doesNotMatch(rosterQueries[1].sql, /is_test_record/);
 });
 
