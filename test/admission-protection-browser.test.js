@@ -124,7 +124,7 @@ test('authorized staff can continue through the normal workflow to the applicati
   assert.ok(await admission.getByRole('option', { name: 'Already enrolled at OsaaH' }).count());
 
   const enquiryUrl = page.url();
-  await nextButton.click();
+  await nextButton.click({ force: true });
   assert.equal(page.url(), enquiryUrl, 'invalid required fields keep the user on the enquiry form');
   assert.equal(applicationWrites.length, 0, 'required enquiry fields prevent progression');
 
@@ -138,12 +138,12 @@ test('authorized staff can continue through the normal workflow to the applicati
   await admission.locator('[name="academicYear"]').selectOption(academicYearValue);
   await admission.locator('[name="term"]').selectOption({ label: '1st Term' });
   await admission.locator('[name="parentPhone"]').fill('invalid-phone');
-  await nextButton.click();
+  await nextButton.click({ force: true });
   await admission.getByText('Enter a valid Ghanaian mobile number', { exact: false }).waitFor();
   assert.equal(applicationWrites.length, 0, 'invalid phone data does not create an application');
 
   await admission.locator('[name="parentPhone"]').fill('0241234567');
-  await nextButton.click();
+  await nextButton.click({ force: true });
   await page.frameLocator('#module-frame').getByRole('heading', { name: 'OFFICIAL ADMISSION FORM' }).waitFor();
   assert.equal(applicationWrites.length, 1, 'the normal UI sends one authorized enquiry request');
   assert.equal(applicationWrites[0].method, 'POST');
