@@ -33,7 +33,7 @@ test('server PDF generator creates Mock PDFs only for eligible JHS results and m
     assert.ok(buffer.length > 2500);
   }
   assert.match(resultPdfFilename(baseResult({ resultType: 'MOCK', mockLabel: '1st Mock', studentIndexNumber: 'OSAAH-DEMO-J3-001' })), /^OSAAH_1st-Mock_Result_OSAAH-DEMO-J3-001_/);
-  assert.match(resultPdfFilename(baseResult({ isSample: true, studentIndexNumber: 'OSAAH-DEMO-001' })), /^OSAAH_SAMPLE_End-of-Term_Result_OSAAH-DEMO-001_/);
+  assert.match(resultPdfFilename(baseResult({ isSample: true, studentIndexNumber: 'OSAAH/DEMO/001' })), /^OSAAH_SAMPLE_End-of-Term_Result_OSAAH-DEMO-001_/);
 });
 
 test('PDF maps generated sample GES assessments and always renders both signature slots', async () => {
@@ -88,13 +88,13 @@ test('sample PDF downloader sends only the configured sample ID to the isolated 
   };
   vm.runInNewContext(helper, sandbox);
   await sandbox.window.downloadResultPdf({
-    isSample: true, studentId: 'STD-000001', permanentStudentId: 'OSAAH-DEMO-001', studentIndexNumber: 'OSAAH-DEMO-001',
+    isSample: true, studentId: 'STD-000001', permanentStudentId: 'OSAAH/DEMO/001', studentIndexNumber: 'OSAAH/DEMO/001',
     classId: 'Basic 1', academicYear: '2026/2027 Academic Year', term: 'First Term'
   });
   assert.equal(request.url, '/api/academic/sample/result/pdf');
   assert.equal(request.init.method, 'POST');
   const body = JSON.parse(request.init.body);
-  assert.equal(body.sampleStudentId, 'OSAAH-DEMO-001');
+  assert.equal(body.sampleStudentId, 'OSAAH/DEMO/001');
   assert.equal('studentId' in body, false);
   assert.equal(body.resultType, 'TERMINAL');
 });
@@ -139,7 +139,7 @@ test('representative full JHS terminal Result Slip fits exactly one A4 page with
   const longHeadteacherRemark = 'Continue to build on this success and aim even higher in the coming term. '.repeat(2).trim();
   const buffer = await service.pdf(baseResult({
     isSample: true,
-    studentIndexNumber: 'OSAAH-DEMO-001',
+    studentIndexNumber: 'OSAAH/DEMO/001',
     classId: 'JHS 2',
     gender: 'Female',
     classGenderDistribution: { totalBoys: 20, totalGirls: 18, totalStudents: 38 },

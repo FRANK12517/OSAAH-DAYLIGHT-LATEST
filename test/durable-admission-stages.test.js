@@ -7,13 +7,16 @@ function database() {
   return {
     state,
     async query(sql, params = []) {
-      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
-      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
-      if (sql.includes('FROM classes')) return params[0] === 'school-1' ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: 'school-1' }] : [];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id', 'status'].map((columnName) => ({ columnName }));
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'enquiry_request_id', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+      if (sql.includes('FROM classes')) return params[0] === 'school-1' ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: 'school-1', status: 'ACTIVE' }] : [];
       if (sql.includes('FROM admission_applications')) {
-        if (sql.includes('WHERE id=? AND school_id=?')) return state.row?.id === params[0] && state.row?.school_id === params[1] ? [{ ...state.row }] : [];
-        if (sql.includes('WHERE school_id=? AND application_number=?')) return state.row?.school_id === params[0] && state.row?.application_number === params[1] ? [{ ...state.row }] : [];
-        return [];
+        const row = state.row;
+        if (!row || row.school_id !== (sql.includes('WHERE id=? AND school_id=?') ? params[1] : params[0])) return [];
+        if (sql.includes('WHERE id=? AND school_id=?')) return row.id === params[0] ? [{ ...row }] : [];
+        if (sql.includes('enquiry_request_id=?')) return row.enquiry_request_id === params[1] ? [{ ...row }] : [];
+        if (sql.includes('application_number=?')) return row.application_number === params[1] ? [{ ...row }] : [];
+        return [{ ...row }];
       }
       return [];
     },

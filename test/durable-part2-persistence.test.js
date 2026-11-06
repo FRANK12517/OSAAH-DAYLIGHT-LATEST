@@ -13,10 +13,11 @@ function databaseFixture() {
       if (sql.includes('FROM students')) return students.filter((row) => row.school_id === params[0] && (row.id === params[1] || row.permanent_student_id === params[2]));
       if (sql.includes('FROM student_profiles') && sql.includes('student_master_id')) return profiles.filter((row) => row.school_id === params[0] && (row.student_master_id === params[1] || row.student_id === params[2]));
       if (sql.includes('FROM student_family_contacts')) return contacts.filter((row) => row.student_id === params[0]);
-      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
-      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
-      if (sql.includes('FROM classes')) return params[0] === 'school-1' ? [{ id: 'class-basic-4', name: 'Basic 4', school_id: 'school-1' }] : [];
+      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id', 'status'].map((columnName) => ({ columnName }));
+      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'enquiry_request_id', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+      if (sql.includes('FROM classes')) return params[0] === 'school-1' ? [{ id: 'class-basic-4', name: 'Basic 4', school_id: 'school-1', status: 'ACTIVE' }] : [];
       if (sql.includes('WHERE id=? AND school_id=?')) return admissions.filter((row) => row.id === params[0] && row.school_id === params[1]);
+      if (sql.includes('enquiry_request_id=?')) return admissions.filter((row) => row.school_id === params[0] && row.enquiry_request_id === params[1]);
       if (sql.includes('FROM admission_applications') && sql.includes('application_number=?')) return admissions.filter((row) => row.school_id === params[0] && row.application_number === params[1]);
       if (sql.includes('FROM admission_applications') && sql.includes('ORDER BY created_at')) return admissions.filter((row) => row.school_id === params[0]).slice(-1);
       if (sql.includes('FROM admission_applications')) return admissions.filter((row) => row.school_id === params[0]);

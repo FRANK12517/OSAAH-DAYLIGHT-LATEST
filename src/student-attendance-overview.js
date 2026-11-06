@@ -276,7 +276,7 @@ export function createStudentAttendanceOverviewService({ database, schoolId = 's
         // Preserve school scope and permanent-ID linkage while tolerating the
         // documented optional fields across production schema revisions.
         if (message.includes('is_test_record')) {
-          candidate = candidate.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%'")
+          candidate = candidate.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' AND s.permanent_student_id NOT LIKE 'OSAAH/DEMO/%'")
             .replace('s.is_test_record AS isTestRecord', '0 AS isTestRecord');
         }
         if (message.includes('student_master_id')) candidate = candidate.replace('sp.student_master_id=s.id OR (sp.student_master_id IS NULL AND sp.student_id=s.permanent_student_id)', 'sp.student_id=s.permanent_student_id');

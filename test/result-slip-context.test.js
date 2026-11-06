@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import { createApp } from '../src/server.mjs';
 import { CORE_LEVELS, createStudentService } from '../src/students.js';
+import { sampleFixturesEnabled } from '../src/test-parent-fixture.js';
 
 const schoolId = 'sch_default_01';
 const actor = { id: 'result-teacher', userId: 'result-teacher', roleKey: 'PROPRIETOR', portal: 'school', schoolId, assignedClassIds: [], permissions: new Set(['*']) };
@@ -38,7 +39,12 @@ test('Result Slip student API scopes real students and returns only existing sam
   students.createStudent({ firstName: 'Other', surname: 'Year', classId: 'Primary 1', academicYearId: '2025/2026', termId: 'First Term' });
   const auth = { authenticateAsync: async (token) => token === 'authorized' ? actor : null };
   const previousSchoolId = process.env.OSAAH_SCHOOL_ID;
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  const previousFixtureFlag = process.env.OSAAH_ENABLE_SAMPLE_FIXTURES;
   process.env.OSAAH_SCHOOL_ID = schoolId;
+  process.env.VERCEL_ENV = 'production';
+  process.env.OSAAH_ENABLE_SAMPLE_FIXTURES = 'false';
+  assert.equal(sampleFixturesEnabled(), false, 'the QA-parent fixture provider stays disabled in production');
   const app = createApp({ auth, students });
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -51,13 +57,13 @@ test('Result Slip student API scopes real students and returns only existing sam
     const realBody = await realResponse.json();
     assert.deepEqual(realBody.students.map((item) => item.id), [real.id]);
     assert.equal(realBody.students[0].permanentStudentId, real.permanentStudentId);
-    const sampleQuery = new URLSearchParams({ academicYear: '2026/2027', term: 'First Term', classId: 'Primary 1', sampleMode: 'true' });
+    const sampleQuery = new URLSearchParams({ academicYear: '2026/2027', term: 'First Term', classId: 'Primary 1', isTestMode: 'true' });
     const sampleResponse = await fetch(`${base}/api/academic/result-students?${sampleQuery}`, { headers });
     assert.equal(sampleResponse.status, 200);
     const sampleBody = await sampleResponse.json();
     assert.equal(sampleBody.students.length, 2);
     assert.ok(sampleBody.students.every((item) => item.isTestRecord === true));
-    assert.deepEqual(sampleBody.students.map((item) => item.permanentStudentId), ['OSAAH-DEMO-001', 'OSAAH-DEMO-002']);
+    assert.deepEqual(sampleBody.students.map((item) => item.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
     assert.ok(sampleBody.students.every((item) => item.id !== real.id), 'Test Mode must not leak the real roster when the class has enrolled students');
 
     const officialCountBefore = students.counts().students;
@@ -69,13 +75,13 @@ test('Result Slip student API scopes real students and returns only existing sam
     const generated = (await generatedResponse.json()).result;
     assert.equal(generated.isSample, true);
     assert.equal(generated.classId, 'Primary 1');
-    assert.equal(generated.studentIndexNumber, 'OSAAH-DEMO-001');
+    assert.equal(generated.studentIndexNumber, 'OSAAH/DEMO/001');
     assert.ok(generated.subjects.length > 0);
     assert.equal(students.counts().students, officialCountBefore, 'sample generation must not alter official student counts');
 
     const samplePdfResponse = await fetch(`${base}/api/academic/sample/result/pdf`, {
       method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', Accept: 'application/pdf' },
-      body: JSON.stringify({ sampleStudentId: 'OSAAH-DEMO-001', classId: 'Primary 1', academicYear: '2026/2027', term: 'First Term', resultType: 'TERMINAL' })
+      body: JSON.stringify({ sampleStudentId: 'OSAAH/DEMO/001', classId: 'Primary 1', academicYear: '2026/2027', term: 'First Term', resultType: 'TERMINAL' })
     });
     assert.equal(samplePdfResponse.status, 200);
     assert.match(samplePdfResponse.headers.get('content-type') || '', /application\/pdf/i);
@@ -86,7 +92,7 @@ test('Result Slip student API scopes real students and returns only existing sam
     assert.equal(students.counts().students, officialCountBefore, 'sample PDF generation must not alter official student counts');
     const sampleMockPdfResponse = await fetch(`${base}/api/academic/sample/result/pdf`, {
       method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', Accept: 'application/pdf' },
-      body: JSON.stringify({ sampleStudentId: 'OSAAH-DEMO-001', classId: 'JHS 1', academicYear: '2026/2027', term: 'First Term', resultType: 'MOCK', mockLabel: '1st Mock' })
+      body: JSON.stringify({ sampleStudentId: 'OSAAH/DEMO/001', classId: 'JHS 1', academicYear: '2026/2027', term: 'First Term', resultType: 'MOCK', mockLabel: '1st Mock' })
     });
     assert.equal(sampleMockPdfResponse.status, 200);
     assert.match(sampleMockPdfResponse.headers.get('content-disposition') || '', /OSAAH_SAMPLE_1st-Mock_Result_/);
@@ -103,7 +109,7 @@ test('Result Slip student API scopes real students and returns only existing sam
       const classSampleResponse = await fetch(`${base}/api/academic/result-students?${classSampleQuery}`, { headers });
       assert.equal(classSampleResponse.status, 200, `${classId} sample roster should load`);
       const classSamples = (await classSampleResponse.json()).students;
-      assert.deepEqual(classSamples.map((item) => item.permanentStudentId), ['OSAAH-DEMO-001', 'OSAAH-DEMO-002']);
+      assert.deepEqual(classSamples.map((item) => item.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
       const classResultResponse = await fetch(`${base}/api/academic/sample/generate`, {
         method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId: classSamples[0].id, classId, academicYear: '2026/2027', term: 'First Term', examinationType: 'TERMINAL' })
@@ -115,11 +121,34 @@ test('Result Slip student API scopes real students and returns only existing sam
       assert.ok(classResult.subjects.length > 0);
       assert.equal(classResult.subjects.every((subject) => Number(subject.totalScore) === Number(subject.caScore) + Number(subject.examScore)), true);
       assert.equal(students.counts().students, officialCountBefore);
+      const modeFlag = CORE_LEVELS.indexOf(classId) % 2 === 0 ? 'sampleMode' : 'isTestMode';
+      const broadsheetResponse = await fetch(`${base}/api/academic/broadsheet?${new URLSearchParams({ academicYear: '2026/2027', term: 'First Term', classId, subjectId: 'mathematics', [modeFlag]: 'true' })}`, { headers });
+      assert.equal(broadsheetResponse.status, 200, `${classId} sample Broadsheet should load in production runtime`);
+      const broadsheetRows = (await broadsheetResponse.json()).rows;
+      assert.deepEqual(broadsheetRows.map((row) => row.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
+      assert.ok(broadsheetRows.every((row) => row.isSample));
     }
+    const mockResultResponse = await fetch(`${base}/api/academic/sample/mock-generate`, {
+      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: 'OSAAH/DEMO/002', classId: 'JHS 1', academicYear: '2026/2027', term: 'First Term', mockLabel: '1st Mock' })
+    });
+    assert.equal(mockResultResponse.status, 201, 'Mock Result Slip generation must work in production runtime');
+    assert.equal((await mockResultResponse.json()).result.isSample, true);
+    const mockScoreRosterResponse = await fetch(`${base}/api/academic/mock-scores/roster?${new URLSearchParams({ classId: 'JHS 1', academicYear: '2026/2027', term: 'First Term', mockLabel: '1st Mock', isTestMode: 'true' })}`, { headers });
+    assert.equal(mockScoreRosterResponse.status, 200);
+    assert.deepEqual((await mockScoreRosterResponse.json()).students.map((student) => student.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
+    const mockBroadsheetResponse = await fetch(`${base}/api/academic/mock-broadsheet?${new URLSearchParams({ academicYear: '2026/2027', term: 'First Term', classId: 'JHS 1', mockLabel: '1st Mock', sampleMode: 'true' })}`, { headers });
+    assert.equal(mockBroadsheetResponse.status, 200);
+    assert.deepEqual((await mockBroadsheetResponse.json()).rows.map((row) => row.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
+    assert.equal(students.counts().students, officialCountBefore, 'sample Mock results and broadsheets must not alter official student counts');
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     if (previousSchoolId === undefined) delete process.env.OSAAH_SCHOOL_ID;
     else process.env.OSAAH_SCHOOL_ID = previousSchoolId;
+    if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previousVercelEnv;
+    if (previousFixtureFlag === undefined) delete process.env.OSAAH_ENABLE_SAMPLE_FIXTURES;
+    else process.env.OSAAH_ENABLE_SAMPLE_FIXTURES = previousFixtureFlag;
   }
 });
 
@@ -153,7 +182,7 @@ test('Mock Results-only permission loads the Mock roster without granting termin
     const sampleResponse = await fetch(`${base}/api/academic/result-students?${mockQuery}`, { headers });
     assert.equal(sampleResponse.status, 200);
     const sampleStudents = (await sampleResponse.json()).students;
-    assert.deepEqual(sampleStudents.map((student) => student.permanentStudentId), ['OSAAH-DEMO-001', 'OSAAH-DEMO-002']);
+    assert.deepEqual(sampleStudents.map((student) => student.permanentStudentId), ['OSAAH/DEMO/001', 'OSAAH/DEMO/002']);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     if (previousSchoolId === undefined) delete process.env.OSAAH_SCHOOL_ID;

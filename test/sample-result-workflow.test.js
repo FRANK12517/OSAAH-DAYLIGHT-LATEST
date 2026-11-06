@@ -18,7 +18,7 @@ test('sample workflow uses existing reserved-ID students in every configured cor
   for (const classId of CORE_LEVELS) {
     const roster = workflow.students(classId);
     assert.equal(roster.length, 2);
-    assert.ok(roster.every((student) => student.isTestRecord && student.permanentStudentId.startsWith('OSAAH-DEMO-')));
+    assert.ok(roster.every((student) => student.isTestRecord && /^OSAAH\/DEMO\/(?:001|002)$/.test(student.permanentStudentId)));
     const result = workflow.generate({ classId, studentId: roster[0].id, academicYear: '2026/2027', term: 'First Term', examinationType: 'TERMINAL' }, actor);
     assert.equal(result.isSample, true);
     assert.equal(result.sampleLabel, 'SAMPLE DATA');

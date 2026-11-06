@@ -74,12 +74,12 @@ test('production fixture dry-run resolves the verified canonical year ID despite
 test('First, Second, and Third Term fixtures use synthetic weekdays within each canonical range', async () => {
   const plan = await buildPlan(database(), { schoolId });
   const expected = [
-    ['OSAAH-DEMO-001', 'term_2026_01', ['2026-09-14', '2026-09-16', '2026-09-18']],
-    ['OSAAH-DEMO-002', 'term_2026_01', ['2026-09-21', '2026-09-23', '2026-09-25']],
-    ['OSAAH-DEMO-001', 'term_2026_02', ['2027-01-18', '2027-01-20', '2027-01-22']],
-    ['OSAAH-DEMO-002', 'term_2026_02', ['2027-01-25', '2027-01-27', '2027-01-29']],
-    ['OSAAH-DEMO-001', 'term_2026_03', ['2027-05-10', '2027-05-12', '2027-05-14']],
-    ['OSAAH-DEMO-002', 'term_2026_03', ['2027-05-17', '2027-05-19', '2027-05-21']]
+    ['OSAAH/DEMO/001', 'term_2026_01', ['2026-09-14', '2026-09-16', '2026-09-18']],
+    ['OSAAH/DEMO/002', 'term_2026_01', ['2026-09-21', '2026-09-23', '2026-09-25']],
+    ['OSAAH/DEMO/001', 'term_2026_02', ['2027-01-18', '2027-01-20', '2027-01-22']],
+    ['OSAAH/DEMO/002', 'term_2026_02', ['2027-01-25', '2027-01-27', '2027-01-29']],
+    ['OSAAH/DEMO/001', 'term_2026_03', ['2027-05-10', '2027-05-12', '2027-05-14']],
+    ['OSAAH/DEMO/002', 'term_2026_03', ['2027-05-17', '2027-05-19', '2027-05-21']]
   ];
 
   for (const [studentId, termId, dates] of expected) {

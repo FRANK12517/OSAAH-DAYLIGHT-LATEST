@@ -16,13 +16,12 @@ test('all three leadership sessions can open Admissions and save/reopen a durabl
   const applications = [];
   const database = {
     async query(sql, params = []) {
-      if (sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id'].map((columnName) => ({ columnName }));
-      if (sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
-      if (sql.includes('FROM classes')) return params[0] === leader.schoolId ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId }] : [];
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='classes'")) return ['id', 'name', 'school_id', 'status'].map((columnName) => ({ columnName }));
+      if (sql.includes('information_schema.COLUMNS') && sql.includes("TABLE_NAME='admission_applications'")) return ['id', 'school_id', 'application_number', 'enquiry_request_id', 'stage', 'applicant_data', 'created_at', 'updated_at'].map((columnName) => ({ columnName }));
+      if (sql.includes('FROM classes')) return params[0] === leader.schoolId ? [{ id: 'class-jhs1', name: 'JHS 1', school_id: leader.schoolId, status: 'ACTIVE' }] : [];
       if (sql.includes('FROM admission_applications')) {
         if (sql.includes('WHERE id=? AND school_id=?')) return applications.filter((row) => row.id === params[0] && row.school_id === params[1]);
-        if (sql.includes('WHERE school_id=? AND application_number=?')) return applications.filter((row) => row.school_id === params[0] && row.application_number === params[1]);
-        return applications.filter((row) => row.school_id === params[0]);
+        return applications.filter((row) => row.school_id === params[0] && (!sql.includes('application_number=?') || row.application_number === params[1]) && (!sql.includes('enquiry_request_id=?') || row.enquiry_request_id === params[1]));
       }
       return [];
     },
