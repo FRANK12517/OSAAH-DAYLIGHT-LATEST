@@ -174,16 +174,16 @@
   ],
   "sourceInventory": "docs/database-schema-inventory.md",
   "migrationFileCount": 82,
-  "runtimeSourceFileCount": 153,
-  "runtimeSqlEvidenceCount": 543,
+  "runtimeSourceFileCount": 157,
+  "runtimeSqlEvidenceCount": 577,
   "historicalTableNameCount": 157,
   "parallelPostgresBaselineTableCount": 161,
   "runtimeTiDBDefinitionTableCount": 5,
   "tableCount": 164,
   "historicalReconciliationCounts": {
     "historicalNamesTotal": 157,
-    "historicalNamesWithExtractedRuntimeSql": 65,
-    "historicalNamesWithRuntimeFileLinksButNoExtractedSql": 17,
+    "historicalNamesWithExtractedRuntimeSql": 66,
+    "historicalNamesWithRuntimeFileLinksButNoExtractedSql": 16,
     "historicalNamesWithoutExtractedRuntimeOperation": 75,
     "nonHistoricalRuntimeOrPlatformNames": [
       "class_subjects",
@@ -197,8 +197,8 @@
     "allCountsAreStaticAndRequireReview": true
   },
   "evidenceCounts": {
-    "runtimeSqlConfirmedTableCount": 71,
-    "runtimeWriteColumnPairs": 134,
+    "runtimeSqlConfirmedTableCount": 72,
+    "runtimeWriteColumnPairs": 140,
     "historicalColumnCandidatePairs": 1827,
     "parallelPostgresColumnDefinitionPairs": 3461,
     "historicalPrimaryKeyEvidenceItems": 157,
@@ -3932,7 +3932,7 @@
           "table": "academic_years",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 164,
+          "line": 171,
           "writeColumns": [],
           "selectProjectionEvidence": "t.id",
           "parameterized": true,
@@ -3942,7 +3942,7 @@
           "table": "academic_years",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 992,
+          "line": 1035,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -3952,7 +3952,7 @@
           "table": "academic_years",
           "operation": "join",
           "source": "src/server.mjs",
-          "line": 992,
+          "line": 1035,
           "writeColumns": [],
           "selectProjectionEvidence": "t.id",
           "parameterized": true,
@@ -4283,11 +4283,11 @@
           "table": "admission_applications",
           "operation": "read",
           "source": "src/durable-admissions.js",
-          "line": 38,
+          "line": 58,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
-          "statementPrefix": "SELECT * FROM admission_applications WHERE school_id=? AND application_number=? LIMIT 1"
+          "statementPrefix": "SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1"
         },
         {
           "table": "admission_applications",
@@ -4297,33 +4297,33 @@
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
-          "statementPrefix": "SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1"
+          "statementPrefix": "SELECT * FROM admission_applications WHERE id=? AND school_id=? LIMIT 1"
+        },
+        {
+          "table": "admission_applications",
+          "operation": "read",
+          "source": "src/durable-admissions.js",
+          "line": 63,
+          "writeColumns": [],
+          "selectProjectionEvidence": "*",
+          "parameterized": true,
+          "statementPrefix": "SELECT * FROM admission_applications WHERE school_id=? AND application_number=? LIMIT 1"
         },
         {
           "table": "admission_applications",
           "operation": "insert",
           "source": "src/durable-admissions.js",
-          "line": 71,
+          "line": 110,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
-          "statementPrefix": "INSERT INTO admission_applications (id,school_id,application_number,enquiry_request_id,stage,applicant_data,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)"
+          "statementPrefix": "INSERT INTO admission_applications (${insertColumns.join(',')}) VALUES (${insertColumns.map(() => '?').join(',')})"
         },
         {
           "table": "admission_applications",
           "operation": "read",
           "source": "src/durable-admissions.js",
-          "line": 74,
-          "writeColumns": [],
-          "selectProjectionEvidence": "*",
-          "parameterized": true,
-          "statementPrefix": "SELECT * FROM admission_applications WHERE school_id=? AND enquiry_request_id=? LIMIT 1"
-        },
-        {
-          "table": "admission_applications",
-          "operation": "read",
-          "source": "src/durable-admissions.js",
-          "line": 81,
+          "line": 120,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
@@ -4333,7 +4333,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 89,
+          "line": 128,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -4346,7 +4346,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 92,
+          "line": 131,
           "writeColumns": [
             "stage",
             "applicant_data",
@@ -4360,7 +4360,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 93,
+          "line": 132,
           "writeColumns": [
             "stage",
             "applicant_data",
@@ -4374,7 +4374,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 111,
+          "line": 150,
           "writeColumns": [
             "stage",
             "applicant_data",
@@ -4388,7 +4388,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 120,
+          "line": 159,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -4401,7 +4401,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 123,
+          "line": 162,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -4414,7 +4414,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 124,
+          "line": 163,
           "writeColumns": [
             "student_id",
             "permanent_student_id",
@@ -4430,7 +4430,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 131,
+          "line": 170,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -4443,7 +4443,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 141,
+          "line": 180,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -4456,7 +4456,7 @@
           "table": "admission_applications",
           "operation": "update",
           "source": "src/durable-admissions.js",
-          "line": 144,
+          "line": 183,
           "writeColumns": [
             "applicant_data",
             "updated_at"
@@ -6777,7 +6777,7 @@
           "table": "ai_audit_logs",
           "operation": "insert",
           "source": "src/ai/durable-stores.js",
-          "line": 83,
+          "line": 113,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -6787,7 +6787,7 @@
           "table": "ai_audit_logs",
           "operation": "read",
           "source": "src/ai/durable-stores.js",
-          "line": 86,
+          "line": 116,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
@@ -7586,7 +7586,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "read",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -7596,7 +7596,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "insert",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": false,
@@ -7606,7 +7606,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "read",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
@@ -7616,7 +7616,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "read",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
@@ -7626,7 +7626,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "read",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": "*",
           "parameterized": true,
@@ -7636,7 +7636,7 @@
           "table": "ai_human_controlled_actions",
           "operation": "update",
           "source": "src/ai/durable-stores.js",
-          "line": 95,
+          "line": 125,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -11969,6 +11969,7 @@
         "auth",
         "durable-administrator-credential-reset",
         "durable-credential-management",
+        "durable-role-account-provisioning",
         "durable-staff-provisioning",
         "platform/forward-production-reconciliation",
         "server"
@@ -11979,6 +11980,7 @@
         "src/auth.js",
         "src/durable-administrator-credential-reset.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/platform/forward-production-reconciliation.js",
         "src/server.mjs"
@@ -11987,7 +11989,7 @@
         "read": 2,
         "join": 0,
         "insert": 0,
-        "update": 5,
+        "update": 6,
         "delete": 0
       },
       "runtimeSqlEvidence": [
@@ -11995,7 +11997,7 @@
           "table": "auth_sessions",
           "operation": "read",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 203,
+          "line": 212,
           "writeColumns": [],
           "selectProjectionEvidence": "id, user_id, school_id, token_hash, created_at, expires_at, revoked_at, last_used_at",
           "parameterized": false,
@@ -12028,8 +12030,20 @@
         {
           "table": "auth_sessions",
           "operation": "update",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 130,
+          "writeColumns": [
+            "revoked_at"
+          ],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "UPDATE auth_sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL"
+        },
+        {
+          "table": "auth_sessions",
+          "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 192,
+          "line": 194,
           "writeColumns": [
             "revoked_at"
           ],
@@ -12041,7 +12055,7 @@
           "table": "auth_sessions",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 238,
+          "line": 240,
           "writeColumns": [
             "revoked_at"
           ],
@@ -12053,7 +12067,7 @@
           "table": "auth_sessions",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 268,
+          "line": 270,
           "writeColumns": [
             "revoked_at"
           ],
@@ -12065,7 +12079,7 @@
           "table": "auth_sessions",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 86,
+          "line": 89,
           "writeColumns": [],
           "selectProjectionEvidence": "id, user_id, school_id, token_hash, created_at, expires_at, revoked_at, last_used_at",
           "parameterized": false,
@@ -12084,6 +12098,7 @@
         "src/auth.js",
         "src/durable-administrator-credential-reset.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/platform/forward-production-reconciliation.js"
       ],
@@ -14667,7 +14682,7 @@
         "src/subjects.js"
       ],
       "runtimeOperations": {
-        "read": 17,
+        "read": 18,
         "join": 8,
         "insert": 0,
         "update": 0,
@@ -14808,11 +14823,21 @@
           "table": "classes",
           "operation": "read",
           "source": "src/durable-admissions.js",
-          "line": 50,
+          "line": 79,
           "writeColumns": [],
           "selectProjectionEvidence": "id,name",
           "parameterized": true,
-          "statementPrefix": "SELECT id,name FROM classes WHERE school_id=? AND status='ACTIVE'"
+          "statementPrefix": "SELECT id,name FROM classes WHERE school_id=?${columns.has('status') ? \" AND status='ACTIVE'\" : ''}"
+        },
+        {
+          "table": "classes",
+          "operation": "read",
+          "source": "src/durable-admissions.js",
+          "line": 81,
+          "writeColumns": [],
+          "selectProjectionEvidence": "c.id,c.name",
+          "parameterized": true,
+          "statementPrefix": "SELECT c.id,c.name FROM classes c JOIN levels l ON l.id=c.level_id WHERE l.school_id=?${columns.has('status') ? \" AND c.status='ACTIVE'\" : ''}"
         },
         {
           "table": "classes",
@@ -14858,7 +14883,7 @@
           "table": "classes",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 90,
+          "line": 92,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -14908,7 +14933,7 @@
           "table": "classes",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 226,
+          "line": 233,
           "writeColumns": [],
           "selectProjectionEvidence": "id,name,sort_order AS displayOrder",
           "parameterized": true,
@@ -18838,27 +18863,44 @@
     },
     {
       "name": "departments",
-      "classification": "RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED",
-      "runtimeRequiredness": "UNRESOLVED",
+      "classification": "RUNTIME_SQL_CONFIRMED",
+      "runtimeRequiredness": "RUNTIME_SQL_PRESENT_REQUIREDNESS_REQUIRES_WORKFLOW_REVIEW",
       "runtimeModules": [
-        "ai/authorization-guard"
+        "ai/authorization-guard",
+        "durable-role-account-provisioning"
       ],
       "sourceFiles": [
-        "src/ai/authorization-guard.js"
+        "src/ai/authorization-guard.js",
+        "src/durable-role-account-provisioning.js"
       ],
       "runtimeOperations": {
         "read": 0,
-        "join": 0,
+        "join": 1,
         "insert": 0,
         "update": 0,
         "delete": 0
       },
-      "runtimeSqlEvidence": [],
+      "runtimeSqlEvidence": [
+        {
+          "table": "departments",
+          "operation": "join",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 90,
+          "writeColumns": [],
+          "selectProjectionEvidence": "d.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT d.id FROM staff s JOIN departments d ON d.id=s.department_id WHERE s.id=? AND d.school_id<>? LIMIT 1 FOR UPDATE"
+        }
+      ],
       "runtimeWriteColumns": [],
       "runtimeWriteColumnsWithoutSchemaEvidence": [],
       "historicalOrParallelColumnEvidenceCount": 5,
-      "runtimeSelectProjectionEvidence": [],
-      "transactionSourceFiles": [],
+      "runtimeSelectProjectionEvidence": [
+        "d.id"
+      ],
+      "transactionSourceFiles": [
+        "src/durable-role-account-provisioning.js"
+      ],
       "aggregationEvidence": [],
       "historicalColumnCandidates": [
         {
@@ -19028,7 +19070,6 @@
         "TiDB-specific DDL and runtime compatibility"
       ],
       "unresolved": [
-        "No statically extracted runtime SQL operation; verify indirect, dynamically composed, or workflow persistence.",
         "Historical merged column types do not establish current type, nullability, or defaults.",
         "Historical key and index evidence may be superseded or incomplete.",
         "TiDB DDL and current runtime compatibility require explicit review."
@@ -24999,7 +25040,7 @@
           "table": "fee_structures_v2",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 214,
+          "line": 221,
           "writeColumns": [],
           "selectProjectionEvidence": "id,school_id AS schoolId,class_id AS classId,academic_year_id AS academicYearId,term_id AS termId,'ADMISSION' AS type,amount,status",
           "parameterized": true,
@@ -25438,7 +25479,7 @@
           "table": "fee_types",
           "operation": "insert",
           "source": "src/server.mjs",
-          "line": 997,
+          "line": 1040,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -30434,6 +30475,7 @@
       "runtimeModules": [
         "ai/contracts",
         "durable-academic",
+        "durable-admissions",
         "fee-collections-repository",
         "server",
         "student-attendance-overview"
@@ -30441,13 +30483,14 @@
       "sourceFiles": [
         "src/ai/contracts.js",
         "src/durable-academic.js",
+        "src/durable-admissions.js",
         "src/fee-collections-repository.js",
         "src/server.mjs",
         "src/student-attendance-overview.js"
       ],
       "runtimeOperations": {
         "read": 0,
-        "join": 2,
+        "join": 3,
         "insert": 0,
         "update": 0,
         "delete": 0
@@ -30466,6 +30509,16 @@
         {
           "table": "levels",
           "operation": "join",
+          "source": "src/durable-admissions.js",
+          "line": 81,
+          "writeColumns": [],
+          "selectProjectionEvidence": "c.id,c.name",
+          "parameterized": true,
+          "statementPrefix": "SELECT c.id,c.name FROM classes c JOIN levels l ON l.id=c.level_id WHERE l.school_id=?${columns.has('status') ? \" AND c.status='ACTIVE'\" : ''}"
+        },
+        {
+          "table": "levels",
+          "operation": "join",
           "source": "src/fee-collections-repository.js",
           "line": 35,
           "writeColumns": [],
@@ -30479,6 +30532,7 @@
       "historicalOrParallelColumnEvidenceCount": 6,
       "runtimeSelectProjectionEvidence": [
         "c.id,c.name,c.display_order AS displayOrder,l.name AS levelName",
+        "c.id,c.name",
         "c.id"
       ],
       "transactionSourceFiles": [
@@ -33639,6 +33693,7 @@
         "auth",
         "durable-announcements",
         "durable-fee-reader",
+        "durable-role-account-provisioning",
         "durable-sms",
         "parent-fee-obligations-repository",
         "parent-historical-records",
@@ -33651,6 +33706,7 @@
         "src/auth.js",
         "src/durable-announcements.js",
         "src/durable-fee-reader.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/parent-fee-obligations-repository.js",
         "src/parent-historical-records.js",
@@ -33658,7 +33714,7 @@
         "src/platform/final-result-slip-reconciliation.js"
       ],
       "runtimeOperations": {
-        "read": 7,
+        "read": 8,
         "join": 5,
         "insert": 1,
         "update": 0,
@@ -33734,6 +33790,16 @@
           "selectProjectionEvidence": "p.id, p.payment_reference AS paymentReference, r.receipt_number AS receiptNumber, i.invoice_number AS invoiceNumber, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) AS studentName, sp.class_id AS className, p.academic_year_id AS academicYear, p.term_id AS term, (SELECT string_agg(DISTINCT ii.fee_type, ', ' ORDER BY ii.fee_type)",
           "parameterized": true,
           "statementPrefix": "SELECT p.id, p.payment_reference AS paymentReference, r.receipt_number AS receiptNumber, i.invoice_number AS invoiceNumber,"
+        },
+        {
+          "table": "parent_student_links",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 77,
+          "writeColumns": [],
+          "selectProjectionEvidence": "parent_user_id",
+          "parameterized": true,
+          "statementPrefix": "SELECT parent_user_id FROM parent_student_links WHERE parent_user_id=? LIMIT 1 FOR UPDATE"
         },
         {
           "table": "parent_student_links",
@@ -33817,6 +33883,7 @@
         "src/admission-enrollment.js",
         "src/auth.js",
         "src/durable-announcements.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/parent-sms-auth.js"
       ],
@@ -38124,6 +38191,7 @@
         "durable-announcements",
         "durable-credential-management",
         "durable-result-blocking",
+        "durable-role-account-provisioning",
         "durable-sms",
         "durable-staff-provisioning",
         "fee-collections",
@@ -38131,6 +38199,7 @@
         "module-registry",
         "parent-sms-auth",
         "proprietor-sidebar-routes",
+        "role-provisioning-diagnostic",
         "school-profile",
         "server",
         "sidebar-classification",
@@ -38154,6 +38223,7 @@
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
         "src/durable-result-blocking.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/fee-collections.js",
@@ -38161,6 +38231,7 @@
         "src/module-registry.js",
         "src/parent-sms-auth.js",
         "src/proprietor-sidebar-routes.js",
+        "src/role-provisioning-diagnostic.js",
         "src/school-profile.js",
         "src/server.mjs",
         "src/sidebar-classification.js",
@@ -38170,8 +38241,8 @@
         "src/user-directory.js"
       ],
       "runtimeOperations": {
-        "read": 2,
-        "join": 17,
+        "read": 3,
+        "join": 19,
         "insert": 0,
         "update": 0,
         "delete": 0
@@ -38260,8 +38331,28 @@
         {
           "table": "roles",
           "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 28,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM roles WHERE role_key=? AND school_id=? ORDER BY id LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "roles",
+          "operation": "join",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 135,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.id FROM users u JOIN staff s ON s.user_id=u.id AND s.school_id=u.school_id JOIN staff_profiles sp ON sp.user_id=u.id AND sp.school_"
+        },
+        {
+          "table": "roles",
+          "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 79,
+          "line": 81,
           "writeColumns": [],
           "selectProjectionEvidence": "id, role_key AS roleKey",
           "parameterized": true,
@@ -38271,7 +38362,7 @@
           "table": "roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 148,
+          "line": 150,
           "writeColumns": [],
           "selectProjectionEvidence": "u.id",
           "parameterized": true,
@@ -38281,7 +38372,7 @@
           "table": "roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 171,
+          "line": 173,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -38291,7 +38382,7 @@
           "table": "roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 234,
+          "line": 236,
           "writeColumns": [],
           "selectProjectionEvidence": "r.role_key AS roleKey",
           "parameterized": true,
@@ -38301,7 +38392,7 @@
           "table": "roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 236,
+          "line": 238,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -38330,6 +38421,16 @@
         {
           "table": "roles",
           "operation": "join",
+          "source": "src/role-provisioning-diagnostic.js",
+          "line": 27,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*) FROM sta"
+        },
+        {
+          "table": "roles",
+          "operation": "join",
           "source": "src/school-profile.js",
           "line": 15,
           "writeColumns": [],
@@ -38341,7 +38442,7 @@
           "table": "roles",
           "operation": "join",
           "source": "src/server.mjs",
-          "line": 144,
+          "line": 151,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
           "parameterized": true,
@@ -38380,12 +38481,13 @@
         "DISTINCT u.id AS userId,CASE WHEN r.role_key='PARENT' THEN 'PARENT' WHEN r.role_key='TEACHER' THEN 'TEACHER' ELSE 'STAFF' END AS recipientType",
         "a.id,a.school_id AS schoolId,a.title,a.message,a.priority,a.recipient_category AS recipientCategory,a.status,a.scheduled_for AS scheduledFor,a.published_at AS publishedAt,a.sender_id AS senderId,a.created_at AS createdAt,u.username AS senderName,r.role_key AS senderRole,ar.read_at AS readAt",
         "u.id AS id, u.username AS username, u.email AS email, u.status AS status, s.id AS staffId, r.role_key AS roleKey",
-        "id, role_key AS roleKey",
         "u.id",
+        "id, role_key AS roleKey",
         "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
         "r.role_key AS roleKey",
         "DISTINCT u.id AS userId,u.school_id AS schoolId,u.phone AS phone, (SELECT COUNT(DISTINCT p.id)",
         "u.id AS userId,u.school_id AS schoolId",
+        "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
         "u.id AS id,COALESCE(NULLIF(TRIM(CONCAT(COALESCE(s.first_name,''),' ',COALESCE(s.last_name,''))),''),u.email) AS fullName,u.email AS contact,r.role_key AS roleKey",
         "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
         "s.id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,u.phone,r.role_key AS roleKey,s.school_id AS schoolId",
@@ -38397,12 +38499,14 @@
         "src/durable-administrator-credential-reset.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/parent-sms-auth.js"
       ],
       "aggregationEvidence": [
-        "src/parent-sms-auth.js"
+        "src/parent-sms-auth.js",
+        "src/role-provisioning-diagnostic.js"
       ],
       "historicalColumnCandidates": [
         {
@@ -39002,7 +39106,7 @@
           "table": "schema_baselines",
           "operation": "read",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 259,
+          "line": 268,
           "writeColumns": [],
           "selectProjectionEvidence": "id, canonical_database AS canonicalDatabase, baseline_at AS baselineAt, repository_commit AS repositoryCommit, schema_fingerprint AS schemaFingerprint, reconciliation_migration AS reconciliationMigration, workflow_provenance AS workflowProvenance, baseline_type AS baselineType, historical_migrations_executed AS historicalMigrationsExecuted, created_at AS createdAt",
           "parameterized": false,
@@ -39012,7 +39116,7 @@
           "table": "schema_baselines",
           "operation": "insert",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 262,
+          "line": 271,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -39322,7 +39426,7 @@
           "table": "schema_migration_lock",
           "operation": "insert",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 219,
+          "line": 228,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": false,
@@ -39332,7 +39436,7 @@
           "table": "schema_migration_lock",
           "operation": "update",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 257,
+          "line": 266,
           "writeColumns": [
             "locked",
             "acquired_at"
@@ -39345,7 +39449,7 @@
           "table": "schema_migration_lock",
           "operation": "update",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 258,
+          "line": 267,
           "writeColumns": [
             "locked",
             "acquired_at"
@@ -39533,7 +39637,7 @@
           "table": "schema_migration_runs",
           "operation": "read",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 231,
+          "line": 240,
           "writeColumns": [],
           "selectProjectionEvidence": "version,name,checksum,state,started_at AS startedAt,completed_at AS completedAt,error_code AS errorCode",
           "parameterized": false,
@@ -39543,7 +39647,7 @@
           "table": "schema_migration_runs",
           "operation": "read",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 236,
+          "line": 245,
           "writeColumns": [],
           "selectProjectionEvidence": "state,checksum",
           "parameterized": true,
@@ -39553,7 +39657,7 @@
           "table": "schema_migration_runs",
           "operation": "insert",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 240,
+          "line": 249,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -39563,7 +39667,7 @@
           "table": "schema_migration_runs",
           "operation": "update",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 246,
+          "line": 255,
           "writeColumns": [
             "state",
             "completed_at",
@@ -39577,7 +39681,7 @@
           "table": "schema_migration_runs",
           "operation": "update",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 251,
+          "line": 260,
           "writeColumns": [
             "state",
             "completed_at",
@@ -39693,15 +39797,17 @@
       "classification": "RUNTIME_SQL_CONFIRMED",
       "runtimeRequiredness": "RUNTIME_SQL_PRESENT_REQUIREDNESS_REQUIRES_WORKFLOW_REVIEW",
       "runtimeModules": [
+        "admission-schema-diagnostic",
         "ai/tidb-database-adapter",
         "platform/assignment-migration-schema"
       ],
       "sourceFiles": [
+        "src/admission-schema-diagnostic.js",
         "src/ai/tidb-database-adapter.js",
         "src/platform/assignment-migration-schema.js"
       ],
       "runtimeOperations": {
-        "read": 2,
+        "read": 3,
         "join": 0,
         "insert": 2,
         "update": 0,
@@ -39710,9 +39816,19 @@
       "runtimeSqlEvidence": [
         {
           "table": "schema_migrations",
+          "operation": "read",
+          "source": "src/admission-schema-diagnostic.js",
+          "line": 27,
+          "writeColumns": [],
+          "selectProjectionEvidence": "version",
+          "parameterized": true,
+          "statementPrefix": "SELECT version FROM schema_migrations WHERE version IN (?,?,?)"
+        },
+        {
+          "table": "schema_migrations",
           "operation": "insert",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 182,
+          "line": 191,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -39722,7 +39838,7 @@
           "table": "schema_migrations",
           "operation": "read",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 230,
+          "line": 239,
           "writeColumns": [],
           "selectProjectionEvidence": "version, name, checksum, applied_at AS appliedAt",
           "parameterized": false,
@@ -39732,7 +39848,7 @@
           "table": "schema_migrations",
           "operation": "insert",
           "source": "src/ai/tidb-database-adapter.js",
-          "line": 255,
+          "line": 264,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -39753,6 +39869,7 @@
       "runtimeWriteColumnsWithoutSchemaEvidence": [],
       "historicalOrParallelColumnEvidenceCount": 4,
       "runtimeSelectProjectionEvidence": [
+        "version",
         "version, name, checksum, applied_at AS appliedAt"
       ],
       "transactionSourceFiles": [],
@@ -40149,6 +40266,7 @@
       "runtimeModules": [
         "ai/tidb-readiness",
         "auth",
+        "durable-role-account-provisioning",
         "durable-staff-provisioning",
         "platform/final-result-slip-reconciliation",
         "platform/forward-finance-migration",
@@ -40160,6 +40278,7 @@
       "sourceFiles": [
         "src/ai/tidb-readiness.js",
         "src/auth.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/platform/final-result-slip-reconciliation.js",
         "src/platform/forward-finance-migration.js",
@@ -40169,7 +40288,7 @@
         "src/school-settings.js"
       ],
       "runtimeOperations": {
-        "read": 5,
+        "read": 6,
         "join": 0,
         "insert": 0,
         "update": 1,
@@ -40179,8 +40298,18 @@
         {
           "table": "schools",
           "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 63,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM schools WHERE id=? FOR UPDATE"
+        },
+        {
+          "table": "schools",
+          "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 117,
+          "line": 119,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -40248,6 +40377,7 @@
       ],
       "transactionSourceFiles": [
         "src/auth.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/platform/forward-finance-migration.js",
         "src/production-three-term-config.js",
@@ -45083,10 +45213,12 @@
         "compliance",
         "durable-announcements",
         "durable-credential-management",
+        "durable-role-account-provisioning",
         "durable-staff-provisioning",
         "existing-student-linking",
         "module-registry",
         "proprietor-sidebar-routes",
+        "role-provisioning-diagnostic",
         "roles",
         "school-context",
         "school-profile",
@@ -45123,10 +45255,12 @@
         "src/compliance.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/existing-student-linking.js",
         "src/module-registry.js",
         "src/proprietor-sidebar-routes.js",
+        "src/role-provisioning-diagnostic.js",
         "src/roles.js",
         "src/school-context.js",
         "src/school-profile.js",
@@ -45144,10 +45278,10 @@
         "src/user-directory.js"
       ],
       "runtimeOperations": {
-        "read": 10,
-        "join": 6,
-        "insert": 1,
-        "update": 1,
+        "read": 15,
+        "join": 7,
+        "insert": 2,
+        "update": 2,
         "delete": 0
       },
       "runtimeSqlEvidence": [
@@ -45184,8 +45318,84 @@
         {
           "table": "staff",
           "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 75,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id,school_id AS schoolId,staff_number AS staffNumber",
+          "parameterized": true,
+          "statementPrefix": "SELECT id,school_id AS schoolId,staff_number AS staffNumber FROM staff WHERE user_id=? FOR UPDATE"
+        },
+        {
+          "table": "staff",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 88,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM staff WHERE school_id=? AND staff_number=? AND id<>? LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "staff",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 90,
+          "writeColumns": [],
+          "selectProjectionEvidence": "d.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT d.id FROM staff s JOIN departments d ON d.id=s.department_id WHERE s.id=? AND d.school_id<>? LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "staff",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 103,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM staff WHERE id=? AND user_id<>? LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "staff",
+          "operation": "update",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 116,
+          "writeColumns": [
+            "school_id",
+            "staff_number",
+            "first_name",
+            "last_name",
+            "updated_at"
+          ],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "UPDATE staff SET school_id=?,staff_number=?,first_name=?,last_name=?,updated_at=? WHERE id=? AND user_id=?"
+        },
+        {
+          "table": "staff",
+          "operation": "insert",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 118,
+          "writeColumns": [],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "INSERT INTO staff (id,school_id,user_id,staff_number,first_name,last_name,department_id,created_at,updated_at) VALUES (?,?,?,?,?,?,NULL,?,?)"
+        },
+        {
+          "table": "staff",
+          "operation": "join",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 133,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.id FROM users u JOIN staff s ON s.user_id=u.id AND s.school_id=u.school_id JOIN staff_profiles sp ON sp.user_id=u.id AND sp.school_"
+        },
+        {
+          "table": "staff",
+          "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 124,
+          "line": 126,
           "writeColumns": [],
           "selectProjectionEvidence": "id, user_id AS userId",
           "parameterized": true,
@@ -45195,7 +45405,7 @@
           "table": "staff",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 134,
+          "line": 136,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -45205,7 +45415,7 @@
           "table": "staff",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 145,
+          "line": 147,
           "writeColumns": [],
           "selectProjectionEvidence": "u.id",
           "parameterized": true,
@@ -45215,7 +45425,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 168,
+          "line": 170,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -45225,7 +45435,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 188,
+          "line": 190,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id",
           "parameterized": true,
@@ -45235,7 +45445,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 209,
+          "line": 211,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -45245,7 +45455,7 @@
           "table": "staff",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 219,
+          "line": 221,
           "writeColumns": [
             "staff_number",
             "first_name",
@@ -45260,7 +45470,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 230,
+          "line": 232,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id",
           "parameterized": true,
@@ -45270,7 +45480,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 249,
+          "line": 251,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -45280,11 +45490,21 @@
           "table": "staff",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 263,
+          "line": 265,
           "writeColumns": [],
           "selectProjectionEvidence": "u.username AS username",
           "parameterized": true,
           "statementPrefix": "SELECT u.username AS username FROM staff s JOIN users u ON u.id=s.user_id WHERE s.user_id=? AND s.school_id=? LIMIT 1"
+        },
+        {
+          "table": "staff",
+          "operation": "read",
+          "source": "src/role-provisioning-diagnostic.js",
+          "line": 25,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*) FROM sta"
         },
         {
           "table": "staff",
@@ -45300,7 +45520,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 144,
+          "line": 151,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
           "parameterized": true,
@@ -45310,7 +45530,7 @@
           "table": "staff",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 151,
+          "line": 158,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -45340,6 +45560,7 @@
       "runtimeWriteColumns": [
         "first_name",
         "last_name",
+        "school_id",
         "staff_number",
         "updated_at"
       ],
@@ -45349,12 +45570,15 @@
         "u.id AS id,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS name",
         "u.id AS id,COALESCE(NULLIF(TRIM(CONCAT_WS(' ',s.first_name,s.last_name)),''),u.username) AS name,r.role_key AS roleKey",
         "u.id AS id, u.username AS username, u.email AS email, u.status AS status, s.id AS staffId, r.role_key AS roleKey",
-        "id, user_id AS userId",
+        "id,school_id AS schoolId,staff_number AS staffNumber",
+        "id",
+        "d.id",
         "u.id",
+        "id, user_id AS userId",
         "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
         "s.id",
-        "id",
         "u.username AS username",
+        "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
         "u.id AS id,COALESCE(NULLIF(TRIM(CONCAT(COALESCE(s.first_name,''),' ',COALESCE(s.last_name,''))),''),u.email) AS fullName,u.email AS contact,r.role_key AS roleKey",
         "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
         "s.id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,u.phone,r.role_key AS roleKey,s.school_id AS schoolId",
@@ -45366,10 +45590,13 @@
         "src/budgets.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
         "src/existing-student-linking.js"
       ],
-      "aggregationEvidence": [],
+      "aggregationEvidence": [
+        "src/role-provisioning-diagnostic.js"
+      ],
       "historicalColumnCandidates": [
         {
           "name": "id",
@@ -45686,7 +45913,7 @@
           "table": "staff_assignments",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 140,
+          "line": 142,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -45696,7 +45923,7 @@
           "table": "staff_assignments",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 173,
+          "line": 175,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -45706,7 +45933,7 @@
           "table": "staff_assignments",
           "operation": "delete",
           "source": "src/durable-staff-provisioning.js",
-          "line": 252,
+          "line": 254,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -45716,7 +45943,7 @@
           "table": "staff_assignments",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 252,
+          "line": 254,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -45726,7 +45953,7 @@
           "table": "staff_assignments",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 254,
+          "line": 256,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -48067,30 +48294,88 @@
       "classification": "RUNTIME_SQL_CONFIRMED",
       "runtimeRequiredness": "RUNTIME_SQL_PRESENT_REQUIREDNESS_REQUIRES_WORKFLOW_REVIEW",
       "runtimeModules": [
+        "durable-role-account-provisioning",
         "durable-staff-provisioning",
+        "role-provisioning-diagnostic",
         "school-profile",
         "single-school-overview",
         "staff-attendance-overview"
       ],
       "sourceFiles": [
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js",
+        "src/role-provisioning-diagnostic.js",
         "src/school-profile.js",
         "src/single-school-overview.js",
         "src/staff-attendance-overview.js"
       ],
       "runtimeOperations": {
-        "read": 5,
-        "join": 2,
-        "insert": 1,
-        "update": 1,
+        "read": 8,
+        "join": 3,
+        "insert": 2,
+        "update": 2,
         "delete": 0
       },
       "runtimeSqlEvidence": [
         {
           "table": "staff_profiles",
           "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 76,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id,school_id AS schoolId,staff_number AS staffNumber",
+          "parameterized": true,
+          "statementPrefix": "SELECT id,school_id AS schoolId,staff_number AS staffNumber FROM staff_profiles WHERE user_id=? FOR UPDATE"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 104,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM staff_profiles WHERE id=? AND user_id<>? LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "update",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 121,
+          "writeColumns": [
+            "school_id",
+            "staff_number",
+            "position"
+          ],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "UPDATE staff_profiles SET school_id=?,staff_number=?,position=? WHERE id=? AND user_id=?"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "insert",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 123,
+          "writeColumns": [],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "INSERT INTO staff_profiles (id,school_id,user_id,staff_number,department,position,date_hired,qualification,created_at) VALUES (?,?,?, ?,NULL,?,NULL,NULL,?)"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "join",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 134,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.id FROM users u JOIN staff s ON s.user_id=u.id AND s.school_id=u.school_id JOIN staff_profiles sp ON sp.user_id=u.id AND sp.school_"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 126,
+          "line": 128,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -48100,7 +48385,7 @@
           "table": "staff_profiles",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 137,
+          "line": 139,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -48110,7 +48395,7 @@
           "table": "staff_profiles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 146,
+          "line": 148,
           "writeColumns": [],
           "selectProjectionEvidence": "u.id",
           "parameterized": true,
@@ -48120,7 +48405,7 @@
           "table": "staff_profiles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 172,
+          "line": 174,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -48130,7 +48415,7 @@
           "table": "staff_profiles",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 210,
+          "line": 212,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -48140,13 +48425,23 @@
           "table": "staff_profiles",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 220,
+          "line": 222,
           "writeColumns": [
             "staff_number"
           ],
           "selectProjectionEvidence": null,
           "parameterized": true,
           "statementPrefix": "UPDATE staff_profiles SET staff_number=? WHERE user_id=? AND school_id=?"
+        },
+        {
+          "table": "staff_profiles",
+          "operation": "read",
+          "source": "src/role-provisioning-diagnostic.js",
+          "line": 26,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*) FROM sta"
         },
         {
           "table": "staff_profiles",
@@ -48180,24 +48475,32 @@
         }
       ],
       "runtimeWriteColumns": [
+        "position",
+        "school_id",
         "staff_number"
       ],
       "runtimeWriteColumnsWithoutSchemaEvidence": [
+        "position",
         "staff_number"
       ],
       "historicalOrParallelColumnEvidenceCount": 27,
       "runtimeSelectProjectionEvidence": [
+        "id,school_id AS schoolId,staff_number AS staffNumber",
         "id",
         "u.id",
         "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
+        "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
         "id,full_name AS fullName,phone AS contact,role_key AS roleKey",
         "role_key AS roleKey,employment_type AS employmentStatus",
         "sp.id,sp.staff_id AS staffId,sp.full_name AS fullName,sp.phone,sp.role_key AS roleKey,sp.appointment_date AS appointmentDate,sp.departure_date AS departureDate,sp.school_id AS schoolId"
       ],
       "transactionSourceFiles": [
+        "src/durable-role-account-provisioning.js",
         "src/durable-staff-provisioning.js"
       ],
-      "aggregationEvidence": [],
+      "aggregationEvidence": [
+        "src/role-provisioning-diagnostic.js"
+      ],
       "historicalColumnCandidates": [
         {
           "name": "id",
@@ -59321,7 +59624,7 @@
           "table": "subjects",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 94,
+          "line": 96,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -60277,7 +60580,7 @@
           "table": "terms",
           "operation": "join",
           "source": "src/server.mjs",
-          "line": 164,
+          "line": 171,
           "writeColumns": [],
           "selectProjectionEvidence": "t.id",
           "parameterized": true,
@@ -60287,7 +60590,7 @@
           "table": "terms",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 992,
+          "line": 1035,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -60297,7 +60600,7 @@
           "table": "terms",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 992,
+          "line": 1035,
           "writeColumns": [],
           "selectProjectionEvidence": "t.id",
           "parameterized": true,
@@ -61109,9 +61412,11 @@
         "durable-administrator-credential-reset",
         "durable-announcements",
         "durable-credential-management",
+        "durable-role-account-provisioning",
         "durable-sms",
         "durable-staff-provisioning",
         "parent-sms-auth",
+        "role-provisioning-diagnostic",
         "school-profile",
         "server",
         "staff-attendance-overview",
@@ -61124,20 +61429,22 @@
         "src/durable-administrator-credential-reset.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/parent-sms-auth.js",
+        "src/role-provisioning-diagnostic.js",
         "src/school-profile.js",
         "src/server.mjs",
         "src/staff-attendance-overview.js",
         "src/user-directory.js"
       ],
       "runtimeOperations": {
-        "read": 5,
-        "join": 13,
-        "insert": 3,
+        "read": 7,
+        "join": 14,
+        "insert": 4,
         "update": 0,
-        "delete": 0
+        "delete": 1
       },
       "runtimeSqlEvidence": [
         {
@@ -61232,9 +61539,49 @@
         },
         {
           "table": "user_roles",
+          "operation": "delete",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 128,
+          "writeColumns": [],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "DELETE FROM user_roles WHERE user_id=?"
+        },
+        {
+          "table": "user_roles",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 128,
+          "writeColumns": [],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "DELETE FROM user_roles WHERE user_id=?"
+        },
+        {
+          "table": "user_roles",
+          "operation": "insert",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 129,
+          "writeColumns": [],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "INSERT INTO user_roles (id,user_id,role_id,created_at) VALUES (?,?,?,?)"
+        },
+        {
+          "table": "user_roles",
+          "operation": "join",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 135,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.id FROM users u JOIN staff s ON s.user_id=u.id AND s.school_id=u.school_id JOIN staff_profiles sp ON sp.user_id=u.id AND sp.school_"
+        },
+        {
+          "table": "user_roles",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 138,
+          "line": 140,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -61244,7 +61591,7 @@
           "table": "user_roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 147,
+          "line": 149,
           "writeColumns": [],
           "selectProjectionEvidence": "u.id",
           "parameterized": true,
@@ -61254,7 +61601,7 @@
           "table": "user_roles",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 170,
+          "line": 172,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -61264,7 +61611,7 @@
           "table": "user_roles",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 234,
+          "line": 236,
           "writeColumns": [],
           "selectProjectionEvidence": "r.role_key AS roleKey",
           "parameterized": true,
@@ -61274,7 +61621,7 @@
           "table": "user_roles",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 236,
+          "line": 238,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -61284,7 +61631,7 @@
           "table": "user_roles",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 237,
+          "line": 239,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -61312,6 +61659,16 @@
         },
         {
           "table": "user_roles",
+          "operation": "read",
+          "source": "src/role-provisioning-diagnostic.js",
+          "line": 27,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*) FROM sta"
+        },
+        {
+          "table": "user_roles",
           "operation": "join",
           "source": "src/school-profile.js",
           "line": 15,
@@ -61324,7 +61681,7 @@
           "table": "user_roles",
           "operation": "read",
           "source": "src/server.mjs",
-          "line": 144,
+          "line": 151,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
           "parameterized": true,
@@ -61368,6 +61725,7 @@
         "r.role_key AS roleKey",
         "DISTINCT u.id AS userId,u.school_id AS schoolId,u.phone AS phone, (SELECT COUNT(DISTINCT p.id)",
         "u.id AS userId,u.school_id AS schoolId",
+        "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
         "u.id AS id,COALESCE(NULLIF(TRIM(CONCAT(COALESCE(s.first_name,''),' ',COALESCE(s.last_name,''))),''),u.email) AS fullName,u.email AS contact,r.role_key AS roleKey",
         "s.id AS id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,COALESCE((SELECT r.role_name",
         "s.id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,u.phone,r.role_key AS roleKey,s.school_id AS schoolId",
@@ -61379,12 +61737,14 @@
         "src/durable-administrator-credential-reset.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/parent-sms-auth.js"
       ],
       "aggregationEvidence": [
-        "src/parent-sms-auth.js"
+        "src/parent-sms-auth.js",
+        "src/role-provisioning-diagnostic.js"
       ],
       "historicalColumnCandidates": [
         {
@@ -61574,6 +61934,7 @@
         "durable-announcements",
         "durable-credential-management",
         "durable-fee-reader",
+        "durable-role-account-provisioning",
         "durable-sms",
         "durable-staff-provisioning",
         "module-registry",
@@ -61581,6 +61942,7 @@
         "parent-sms-auth",
         "platform/forward-finance-migration",
         "proprietor-sidebar-routes",
+        "role-provisioning-diagnostic",
         "school-profile",
         "server",
         "sidebar-classification",
@@ -61598,6 +61960,7 @@
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
         "src/durable-fee-reader.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/module-registry.js",
@@ -61605,6 +61968,7 @@
         "src/parent-sms-auth.js",
         "src/platform/forward-finance-migration.js",
         "src/proprietor-sidebar-routes.js",
+        "src/role-provisioning-diagnostic.js",
         "src/school-profile.js",
         "src/server.mjs",
         "src/sidebar-classification.js",
@@ -61614,10 +61978,10 @@
         "src/user-directory.js"
       ],
       "runtimeOperations": {
-        "read": 17,
+        "read": 21,
         "join": 12,
         "insert": 2,
-        "update": 6,
+        "update": 7,
         "delete": 0
       },
       "runtimeSqlEvidence": [
@@ -61779,8 +62143,56 @@
         {
           "table": "users",
           "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 69,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id,school_id AS schoolId,username,email,full_name AS fullName,status,role",
+          "parameterized": true,
+          "statementPrefix": "SELECT id,school_id AS schoolId,username,email,full_name AS fullName,status,role FROM users WHERE LOWER(COALESCE(email,''))=? LIMIT 2 FOR UPDATE"
+        },
+        {
+          "table": "users",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 72,
+          "writeColumns": [],
+          "selectProjectionEvidence": "id",
+          "parameterized": true,
+          "statementPrefix": "SELECT id FROM users WHERE LOWER(COALESCE(username,''))=? AND id<>? LIMIT 1 FOR UPDATE"
+        },
+        {
+          "table": "users",
+          "operation": "update",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 126,
+          "writeColumns": [
+            "school_id",
+            "username",
+            "full_name",
+            "role",
+            "status",
+            "password_hash",
+            "updated_at"
+          ],
+          "selectProjectionEvidence": null,
+          "parameterized": true,
+          "statementPrefix": "UPDATE users SET school_id=?,username=?,full_name=?,role=?,status='ACTIVE',password_hash=?,updated_at=? WHERE id=?"
+        },
+        {
+          "table": "users",
+          "operation": "read",
+          "source": "src/durable-role-account-provisioning.js",
+          "line": 133,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.id",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.id FROM users u JOIN staff s ON s.user_id=u.id AND s.school_id=u.school_id JOIN staff_profiles sp ON sp.user_id=u.id AND sp.school_"
+        },
+        {
+          "table": "users",
+          "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 120,
+          "line": 122,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -61790,7 +62202,7 @@
           "table": "users",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 121,
+          "line": 123,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -61800,7 +62212,7 @@
           "table": "users",
           "operation": "insert",
           "source": "src/durable-staff-provisioning.js",
-          "line": 133,
+          "line": 135,
           "writeColumns": [],
           "selectProjectionEvidence": null,
           "parameterized": true,
@@ -61810,7 +62222,7 @@
           "table": "users",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 144,
+          "line": 146,
           "writeColumns": [],
           "selectProjectionEvidence": "u.id",
           "parameterized": true,
@@ -61820,7 +62232,7 @@
           "table": "users",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 169,
+          "line": 171,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
           "parameterized": false,
@@ -61830,7 +62242,7 @@
           "table": "users",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 188,
+          "line": 190,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id",
           "parameterized": true,
@@ -61840,7 +62252,7 @@
           "table": "users",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 191,
+          "line": 193,
           "writeColumns": [
             "status"
           ],
@@ -61852,7 +62264,7 @@
           "table": "users",
           "operation": "read",
           "source": "src/durable-staff-provisioning.js",
-          "line": 214,
+          "line": 216,
           "writeColumns": [],
           "selectProjectionEvidence": "id",
           "parameterized": true,
@@ -61862,7 +62274,7 @@
           "table": "users",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 216,
+          "line": 218,
           "writeColumns": [
             "email"
           ],
@@ -61874,7 +62286,7 @@
           "table": "users",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 218,
+          "line": 220,
           "writeColumns": [
             "full_name",
             "phone"
@@ -61887,7 +62299,7 @@
           "table": "users",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 230,
+          "line": 232,
           "writeColumns": [],
           "selectProjectionEvidence": "s.id",
           "parameterized": true,
@@ -61897,7 +62309,7 @@
           "table": "users",
           "operation": "join",
           "source": "src/durable-staff-provisioning.js",
-          "line": 263,
+          "line": 265,
           "writeColumns": [],
           "selectProjectionEvidence": "u.username AS username",
           "parameterized": true,
@@ -61907,7 +62319,7 @@
           "table": "users",
           "operation": "update",
           "source": "src/durable-staff-provisioning.js",
-          "line": 266,
+          "line": 268,
           "writeColumns": [
             "password_hash"
           ],
@@ -61978,6 +62390,16 @@
         {
           "table": "users",
           "operation": "read",
+          "source": "src/role-provisioning-diagnostic.js",
+          "line": 36,
+          "writeColumns": [],
+          "selectProjectionEvidence": "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
+          "parameterized": true,
+          "statementPrefix": "SELECT u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*) FROM sta"
+        },
+        {
+          "table": "users",
+          "operation": "read",
           "source": "src/school-profile.js",
           "line": 14,
           "writeColumns": [],
@@ -62011,8 +62433,11 @@
         "full_name",
         "password_hash",
         "phone",
+        "role",
+        "school_id",
         "status",
-        "updated_at"
+        "updated_at",
+        "username"
       ],
       "runtimeWriteColumnsWithoutSchemaEvidence": [],
       "historicalOrParallelColumnEvidenceCount": 11,
@@ -62029,6 +62454,7 @@
         "a.id,a.school_id AS schoolId,a.title,a.message,a.priority,a.recipient_category AS recipientCategory,a.status,a.scheduled_for AS scheduledFor,a.published_at AS publishedAt,a.sender_id AS senderId,a.created_at AS createdAt,u.username AS senderName,r.role_key AS senderRole,ar.read_at AS readAt",
         "u.id AS id, u.username AS username, u.email AS email, u.status AS status, s.id AS staffId, r.role_key AS roleKey",
         "p.id, p.payment_reference AS paymentReference, r.receipt_number AS receiptNumber, i.invoice_number AS invoiceNumber, CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) AS studentName, sp.class_id AS className, p.academic_year_id AS academicYear, p.term_id AS term, (SELECT string_agg(DISTINCT ii.fee_type, ', ' ORDER BY ii.fee_type)",
+        "id,school_id AS schoolId,username,email,full_name AS fullName,status,role",
         "u.id",
         "s.id AS id, s.staff_number AS staffId, s.first_name AS firstName, s.last_name AS lastName, u.username AS username, u.email AS email, u.status AS accountStatus, u.created_at AS createdAt, u.full_name AS fullName, u.phone AS phone, r.role_key AS roleKey, sa.class_id AS assignedClassId, sa.subject_id AS assignedSubjectId",
         "s.id",
@@ -62038,6 +62464,7 @@
         "s.student_status AS studentStatus, e.academic_year_id AS academicYearId, y.name AS academicYearName, e.term_id AS termId, t.name AS termName, e.class_id AS classId, c.name AS className, e.enrollment_status AS enrollmentStatus",
         "DISTINCT u.id AS userId,u.school_id AS schoolId,u.phone AS phone, (SELECT COUNT(DISTINCT p.id)",
         "u.id AS userId,u.school_id AS schoolId",
+        "u.email AS email, u.school_id AS schoolId, UPPER(COALESCE(u.status, 'ACTIVE')) AS accountStatus, (SELECT COUNT(*)",
         "u.id AS id,COALESCE(NULLIF(TRIM(CONCAT(COALESCE(s.first_name,''),' ',COALESCE(s.last_name,''))),''),u.email) AS fullName,u.email AS contact,r.role_key AS roleKey",
         "s.id,s.staff_number AS employeeId,TRIM(CONCAT_WS(' ',s.first_name,s.last_name)) AS fullName,u.phone,r.role_key AS roleKey,s.school_id AS schoolId",
         "u.id AS id, u.email AS username, u.email AS email, u.status AS status, s.first_name AS firstName, s.last_name AS lastName, r.role_key AS roleKey, r.role_name AS roleName"
@@ -62048,13 +62475,15 @@
         "src/durable-administrator-credential-reset.js",
         "src/durable-announcements.js",
         "src/durable-credential-management.js",
+        "src/durable-role-account-provisioning.js",
         "src/durable-sms.js",
         "src/durable-staff-provisioning.js",
         "src/parent-sms-auth.js",
         "src/platform/forward-finance-migration.js"
       ],
       "aggregationEvidence": [
-        "src/parent-sms-auth.js"
+        "src/parent-sms-auth.js",
+        "src/role-provisioning-diagnostic.js"
       ],
       "historicalColumnCandidates": [
         {
@@ -63332,6 +63761,7 @@
           "src/auth.js",
           "src/durable-administrator-credential-reset.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/platform/forward-production-reconciliation.js",
           "src/server.mjs"
@@ -63351,6 +63781,7 @@
           "src/auth.js",
           "src/durable-administrator-credential-reset.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/platform/forward-production-reconciliation.js",
           "src/server.mjs"
@@ -63820,21 +64251,24 @@
       },
       {
         "name": "departments",
-        "disposition": "UNRESOLVED",
+        "disposition": "REQUIRED_CURRENT_RUNTIME",
         "evidence": [
-          "src/ai/authorization-guard.js"
+          "src/ai/authorization-guard.js",
+          "src/durable-role-account-provisioning.js"
         ],
+        "qualification": "SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed.",
         "unresolved": [
-          "Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths."
+          "Exact active workflow, current columns, constraints, and TiDB definition remain unresolved."
         ],
         "missingEvidence": [
-          "No complete current runtime operation or approved retirement record establishes whether this object is still used.",
-          "Current TiDB column types, nullability/defaults, keys, indexes, relationships, and lifecycle are not established."
+          "The scanner establishes literal operation references and source paths, not a complete per-column physical TiDB contract.",
+          "Current TiDB types, nullability/defaults, keys, indexes, FK actions, charset/collation, and lifecycle are not established."
         ],
-        "whyRepositoryEvidenceIsInsufficient": "Historical migrations and/or lexical source links are not proof of current use, complete DDL, or obsolescence.",
-        "requiredExternalDecision": "A product/domain owner must identify the supported workflow or explicitly retire it; if supported, provide its current writer/reader contract and required retention before disposition.",
+        "whyRepositoryEvidenceIsInsufficient": "Runtime SQL constrains names and operations but does not establish physical SQL types, all null/default semantics, database-enforced uniqueness, referential actions, or target-version behavior.",
+        "requiredExternalDecision": "A database/domain owner must approve the physical type, length/precision, null/default, keys/indexes, FK actions, charset/collation, and target TiDB version after reviewing the cited runtime operations and historical candidates.",
         "affectedWorkflowEvidence": [
-          "src/ai/authorization-guard.js"
+          "src/ai/authorization-guard.js",
+          "src/durable-role-account-provisioning.js"
         ]
       },
       {
@@ -64515,6 +64949,7 @@
         "evidence": [
           "src/ai/contracts.js",
           "src/durable-academic.js",
+          "src/durable-admissions.js",
           "src/fee-collections-repository.js",
           "src/server.mjs",
           "src/student-attendance-overview.js"
@@ -64532,6 +64967,7 @@
         "affectedWorkflowEvidence": [
           "src/ai/contracts.js",
           "src/durable-academic.js",
+          "src/durable-admissions.js",
           "src/fee-collections-repository.js",
           "src/server.mjs",
           "src/student-attendance-overview.js"
@@ -64761,6 +65197,7 @@
           "src/auth.js",
           "src/durable-announcements.js",
           "src/durable-fee-reader.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/parent-fee-obligations-repository.js",
           "src/parent-historical-records.js",
@@ -64782,6 +65219,7 @@
           "src/auth.js",
           "src/durable-announcements.js",
           "src/durable-fee-reader.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/parent-fee-obligations-repository.js",
           "src/parent-historical-records.js",
@@ -65171,6 +65609,7 @@
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
           "src/durable-result-blocking.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/fee-collections.js",
@@ -65178,6 +65617,7 @@
           "src/module-registry.js",
           "src/parent-sms-auth.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/sidebar-classification.js",
@@ -65211,6 +65651,7 @@
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
           "src/durable-result-blocking.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/fee-collections.js",
@@ -65218,6 +65659,7 @@
           "src/module-registry.js",
           "src/parent-sms-auth.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/sidebar-classification.js",
@@ -65312,6 +65754,7 @@
         "name": "schema_migrations",
         "disposition": "REQUIRED_SUPPORTED_WORKFLOW",
         "evidence": [
+          "src/admission-schema-diagnostic.js",
           "src/ai/tidb-database-adapter.js",
           "src/platform/assignment-migration-schema.js"
         ],
@@ -65325,6 +65768,7 @@
         "whyRepositoryEvidenceIsInsufficient": "Runtime SQL constrains names and operations but does not establish physical SQL types, all null/default semantics, database-enforced uniqueness, referential actions, or target-version behavior.",
         "requiredExternalDecision": "A database/domain owner must approve the physical type, length/precision, null/default, keys/indexes, FK actions, charset/collation, and target TiDB version after reviewing the cited runtime operations and historical candidates.",
         "affectedWorkflowEvidence": [
+          "src/admission-schema-diagnostic.js",
           "src/ai/tidb-database-adapter.js",
           "src/platform/assignment-migration-schema.js"
         ]
@@ -65352,6 +65796,7 @@
         "evidence": [
           "src/ai/tidb-readiness.js",
           "src/auth.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/platform/final-result-slip-reconciliation.js",
           "src/platform/forward-finance-migration.js",
@@ -65373,6 +65818,7 @@
         "affectedWorkflowEvidence": [
           "src/ai/tidb-readiness.js",
           "src/auth.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/platform/final-result-slip-reconciliation.js",
           "src/platform/forward-finance-migration.js",
@@ -65690,10 +66136,12 @@
           "src/compliance.js",
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/existing-student-linking.js",
           "src/module-registry.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/roles.js",
           "src/school-context.js",
           "src/school-profile.js",
@@ -65740,10 +66188,12 @@
           "src/compliance.js",
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
           "src/existing-student-linking.js",
           "src/module-registry.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/roles.js",
           "src/school-context.js",
           "src/school-profile.js",
@@ -65885,7 +66335,9 @@
         "name": "staff_profiles",
         "disposition": "REQUIRED_CURRENT_RUNTIME",
         "evidence": [
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/single-school-overview.js",
           "src/staff-attendance-overview.js"
@@ -65901,7 +66353,9 @@
         "whyRepositoryEvidenceIsInsufficient": "Runtime SQL constrains names and operations but does not establish physical SQL types, all null/default semantics, database-enforced uniqueness, referential actions, or target-version behavior.",
         "requiredExternalDecision": "A database/domain owner must approve the physical type, length/precision, null/default, keys/indexes, FK actions, charset/collation, and target TiDB version after reviewing the cited runtime operations and historical candidates.",
         "affectedWorkflowEvidence": [
+          "src/durable-role-account-provisioning.js",
           "src/durable-staff-provisioning.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/single-school-overview.js",
           "src/staff-attendance-overview.js"
@@ -66729,9 +67183,11 @@
           "src/durable-administrator-credential-reset.js",
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/parent-sms-auth.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/staff-attendance-overview.js",
@@ -66753,9 +67209,11 @@
           "src/durable-administrator-credential-reset.js",
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/parent-sms-auth.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/staff-attendance-overview.js",
@@ -66774,6 +67232,7 @@
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
           "src/durable-fee-reader.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/module-registry.js",
@@ -66781,6 +67240,7 @@
           "src/parent-sms-auth.js",
           "src/platform/forward-finance-migration.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/sidebar-classification.js",
@@ -66807,6 +67267,7 @@
           "src/durable-announcements.js",
           "src/durable-credential-management.js",
           "src/durable-fee-reader.js",
+          "src/durable-role-account-provisioning.js",
           "src/durable-sms.js",
           "src/durable-staff-provisioning.js",
           "src/module-registry.js",
@@ -66814,6 +67275,7 @@
           "src/parent-sms-auth.js",
           "src/platform/forward-finance-migration.js",
           "src/proprietor-sidebar-routes.js",
+          "src/role-provisioning-diagnostic.js",
           "src/school-profile.js",
           "src/server.mjs",
           "src/sidebar-classification.js",
@@ -67609,11 +68071,11 @@
     ],
     "completionStatus": "INCOMPLETE_REQUIRED_CONTRACTS_AND_OBJECT_DISPOSITIONS_REMAIN_UNRESOLVED",
     "tableDispositionCounts": {
-      "REQUIRED_CURRENT_RUNTIME": 66,
+      "REQUIRED_CURRENT_RUNTIME": 67,
       "REQUIRED_SUPPORTED_WORKFLOW": 5,
       "LEGACY_COMPATIBILITY_ONLY": 1,
       "OBSOLETE_WITH_EVIDENCE": 0,
-      "UNRESOLVED": 92
+      "UNRESOLVED": 91
     },
     "viewDispositionCounts": {
       "REQUIRED_CURRENT_RUNTIME": 0,
@@ -67654,12 +68116,12 @@
     ]
   },
   "unresolvedSummary": {
-    "runtimeSqlConfirmedTables": 71,
-    "runtimeReferencedButUnresolvedTables": 17,
+    "runtimeSqlConfirmedTables": 72,
+    "runtimeReferencedButUnresolvedTables": 16,
     "historicalPotentiallyObsoleteOrIndirectTables": 75,
     "parallelPostgresBaselineOnlyTables": 0,
     "runtimeTablesWithoutAnySchemaDefinitionEvidence": 1,
-    "runtimeWriteColumnPairsWithoutAnySchemaDefinitionEvidence": 1,
+    "runtimeWriteColumnPairsWithoutAnySchemaDefinitionEvidence": 2,
     "allObjectsRemainUnresolvedForCanonicalDdl": true
   }
 }

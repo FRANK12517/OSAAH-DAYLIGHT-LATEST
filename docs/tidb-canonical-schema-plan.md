@@ -5,25 +5,25 @@
 ## Scope and identifiers
 
 - Repository revision reviewed: `e142db137ac3cfd1a60c6981774763df59612333` (working tree includes preserved uncommitted work).
-- Historical SQL files: 82; runtime source files scanned: 153.
+- Historical SQL files: 82; runtime source files scanned: 157.
 - Target database: `osaahdaylightschool`; single school: `sch_default_01`. No school, user, student, or other operational rows are proposed.
 - Historical table-name inventory: 157; separate PostgreSQL baseline table-name set: 161; native TiDB platform metadata DDL tables: 5; combined names: 164; historically declared views: 8.
-- Runtime SQL references extracted: 543 (static literal scan; dynamically assembled SQL can be missed).
+- Runtime SQL references extracted: 577 (static literal scan; dynamically assembled SQL can be missed).
 
-- Evidence candidates (not canonical requirements): 1827 historical column/type pairs, 3461 parallel PostgreSQL column-definition occurrences, 134 runtime write-column pairs, 157 historical PK items, 103 historical unique items, 400 historical FK items, 175 historical secondary-index items. PostgreSQL constraint totals are separately recorded in the manifest; overlapping and superseded evidence is not deduplicated into a final schema.
+- Evidence candidates (not canonical requirements): 1827 historical column/type pairs, 3461 parallel PostgreSQL column-definition occurrences, 140 runtime write-column pairs, 157 historical PK items, 103 historical unique items, 400 historical FK items, 175 historical secondary-index items. PostgreSQL constraint totals are separately recorded in the manifest; overlapping and superseded evidence is not deduplicated into a final schema.
 
 ## Classification
 
 | Classification | Count | Meaning |
 |---|---:|---|
-| Runtime SQL confirmed | 71 | Static SQL literal references identify a query or write target. |
-| Runtime reference, operation unresolved | 17 | Existing generated inventory links runtime files, but this scanner did not extract a SQL operation. |
+| Runtime SQL confirmed | 72 | Static SQL literal references identify a query or write target. |
+| Runtime reference, operation unresolved | 16 | Existing generated inventory links runtime files, but this scanner did not extract a SQL operation. |
 | Historical, potentially obsolete or indirect | 75 | Found in migration evidence without an extracted runtime reference; not discarded. |
 
 | PostgreSQL baseline only | 0 | Present in separate PostgreSQL baseline evidence without extracted runtime SQL or historical inventory mapping; not TiDB-confirmed. |
 
 - Runtime SQL tables with no historical or parallel PostgreSQL column evidence: 1.
-- Runtime write-column pairs with no historical or parallel PostgreSQL column evidence: 1.
+- Runtime write-column pairs with no historical or parallel PostgreSQL column evidence: 2.
 
 ## Table-by-table evidence matrix
 
@@ -56,7 +56,7 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `attendance_notification_settings` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 006_attendance.sql |
 | `attendance_sync_conflicts` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 006_attendance.sql |
 | `audit_logs` | RUNTIME_SQL_CONFIRMED | 3 | 1/0/2/0/0 | 1/0 | 001_foundation.sql |
-| `auth_sessions` | RUNTIME_SQL_CONFIRMED | 8 | 2/0/0/5/0 | 2/0 | 052_durable_auth_sessions.sql, 053_forward_production_reconciliation.sql |
+| `auth_sessions` | RUNTIME_SQL_CONFIRMED | 9 | 2/0/0/6/0 | 2/0 | 052_durable_auth_sessions.sql, 053_forward_production_reconciliation.sql |
 | `budget_items` | RUNTIME_SQL_CONFIRMED | 3 | 3/0/2/0/1 | 1/0 | 050_budget_management.sql |
 | `budgets` | RUNTIME_SQL_CONFIRMED | 9 | 3/0/1/2/0 | 1/0 | 050_budget_management.sql |
 | `calendar_events` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 010_communication.sql |
@@ -64,7 +64,7 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `canonical_ges_assessments` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 1 | 0/0/0/0/0 | 1/0 | 056_canonical_ges_assessments.sql |
 | `class_label_aliases` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 031_controlled_schema_upgrade.sql |
 | `class_subjects` | RUNTIME_SQL_CONFIRMED | 1 | 1/0/0/0/0 | 0/0 | none indexed |
-| `classes` | RUNTIME_SQL_CONFIRMED | 44 | 17/8/0/0/0 | 1/4 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 038_canonical_class_database_fee_hub.sql |
+| `classes` | RUNTIME_SQL_CONFIRMED | 44 | 18/8/0/0/0 | 1/4 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 038_canonical_class_database_fee_hub.sql |
 | `communication_delivery_log` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 010_communication.sql |
 | `communication_delivery_logs` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 025_communication_engine.sql |
 | `communication_messages` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 025_communication_engine.sql |
@@ -77,7 +77,7 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `counselling_records` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
 | `data_breaches` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 013_compliance_privacy.sql |
 | `data_protection_officers` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 013_compliance_privacy.sql |
-| `departments` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 1 | 0/0/0/0/0 | 1/0 | 001_foundation.sql |
+| `departments` | RUNTIME_SQL_CONFIRMED | 2 | 0/1/0/0/0 | 1/0 | 001_foundation.sql |
 | `document_versions` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 013_compliance_privacy.sql |
 | `examination_candidates` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 007_examinations_results.sql |
 | `examination_marks` | RUNTIME_SQL_CONFIRMED | 1 | 1/0/0/0/0 | 1/0 | 007_examinations_results.sql |
@@ -109,7 +109,7 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `inventory_items` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 012_resources.sql |
 | `inventory_movements` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 012_resources.sql |
 | `invoices` | RUNTIME_SQL_CONFIRMED | 15 | 1/0/0/0/0 | 1/0 | 008_fees_finance.sql |
-| `levels` | RUNTIME_SQL_CONFIRMED | 5 | 0/2/0/0/0 | 1/0 | 001_foundation.sql |
+| `levels` | RUNTIME_SQL_CONFIRMED | 6 | 0/3/0/0/0 | 1/0 | 001_foundation.sql |
 | `library_books` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
 | `library_loans` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
 | `managed_documents` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 013_compliance_privacy.sql |
@@ -120,7 +120,7 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `osaah_fresh_installations` | TIDB_NATIVE_PLATFORM_METADATA_DDL | 1 | 0/0/0/0/0 | 0/0 | none indexed |
 | `parent_auth_challenges` | RUNTIME_SQL_CONFIRMED | 1 | 3/0/1/4/1 | 1/0 | 082_parent_sms_auth.sql |
 | `parent_auth_rate_limits` | RUNTIME_SQL_CONFIRMED | 3 | 3/0/1/1/1 | 1/0 | 082_parent_sms_auth.sql |
-| `parent_student_links` | RUNTIME_SQL_CONFIRMED | 10 | 7/5/1/0/0 | 1/4 | 003_students_admissions.sql, 026_parent_notifications.sql, 054_durable_score_entry_academic_contract.sql |
+| `parent_student_links` | RUNTIME_SQL_CONFIRMED | 11 | 8/5/1/0/0 | 1/4 | 003_students_admissions.sql, 026_parent_notifications.sql, 054_durable_score_entry_academic_contract.sql |
 | `payment_gateway_configs` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 008_fees_finance.sql |
 | `payments` | RUNTIME_SQL_CONFIRMED | 19 | 1/0/0/0/0 | 1/0 | 008_fees_finance.sql |
 | `permissions` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 46 | 0/0/0/0/0 | 2/0 | 001_foundation.sql, 032_production_rbac_reconciliation.sql |
@@ -134,14 +134,14 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `result_signatures` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 017_academic_results_migration.sql |
 | `retention_policies` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 013_compliance_privacy.sql |
 | `role_permissions` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 1 | 0/0/0/0/0 | 2/0 | 001_foundation.sql, 032_production_rbac_reconciliation.sql |
-| `roles` | RUNTIME_SQL_CONFIRMED | 28 | 2/17/0/0/0 | 2/0 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 032_production_rbac_reconciliation.sql |
+| `roles` | RUNTIME_SQL_CONFIRMED | 30 | 3/19/0/0/0 | 2/0 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 032_production_rbac_reconciliation.sql |
 | `sample_data_fixtures` | RUNTIME_SQL_CONFIRMED | 1 | 3/0/1/1/0 | 1/0 | 061_durable_sample_data_fixtures.sql |
 | `schema_baselines` | RUNTIME_SQL_CONFIRMED | 1 | 1/0/1/0/0 | 0/0 | none indexed |
 | `schema_migration_lock` | RUNTIME_SQL_CONFIRMED | 3 | 2/0/1/2/0 | 0/0 | none indexed |
 | `schema_migration_runs` | RUNTIME_SQL_CONFIRMED | 1 | 2/0/1/2/0 | 0/0 | none indexed |
-| `schema_migrations` | RUNTIME_SQL_CONFIRMED | 2 | 2/0/2/0/0 | 0/0 | none indexed |
+| `schema_migrations` | RUNTIME_SQL_CONFIRMED | 3 | 3/0/2/0/0 | 0/0 | none indexed |
 | `school_property` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 012_resources.sql |
-| `schools` | RUNTIME_SQL_CONFIRMED | 9 | 5/0/0/1/0 | 1/0 | 001_foundation.sql |
+| `schools` | RUNTIME_SQL_CONFIRMED | 10 | 6/0/0/1/0 | 1/0 | 001_foundation.sql |
 | `shep_activities` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 3 | 0/0/0/0/0 | 1/0 | 021_shep_activities.sql |
 | `shep_activity_attachments` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 021_shep_activities.sql |
 | `shep_activity_participants` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 021_shep_activities.sql |
@@ -157,14 +157,14 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `sporting_results` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 019_sporting_activities.sql |
 | `sporting_sports` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 019_sporting_activities.sql |
 | `sporting_teams` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 019_sporting_activities.sql |
-| `staff` | RUNTIME_SQL_CONFIRMED | 38 | 10/6/1/1/0 | 1/0 | 001_foundation.sql |
+| `staff` | RUNTIME_SQL_CONFIRMED | 40 | 15/7/2/2/0 | 1/0 | 001_foundation.sql |
 | `staff_assignments` | RUNTIME_SQL_CONFIRMED | 2 | 1/1/2/0/1 | 1/0 | 009_staff_hr.sql |
 | `staff_attendance` | RUNTIME_SQL_CONFIRMED | 3 | 4/0/1/1/0 | 1/24 | 006_attendance.sql, 034_attendance_academic_scope.sql, 035_staff_leave_attendance_reconciliation.sql, 036_attendance_provenance_audit.sql, 049_production_schema_reconciliation.sql |
 | `staff_attendance_reconciliation_audit` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 2/0 | 035_staff_leave_attendance_reconciliation.sql, 049_production_schema_reconciliation.sql |
 | `staff_documents` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 009_staff_hr.sql |
 | `staff_leave` | RUNTIME_SQL_CONFIRMED | 2 | 2/0/0/0/0 | 1/8 | 009_staff_hr.sql, 035_staff_leave_attendance_reconciliation.sql, 049_production_schema_reconciliation.sql |
 | `staff_leave_balances` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 009_staff_hr.sql |
-| `staff_profiles` | RUNTIME_SQL_CONFIRMED | 4 | 5/2/1/1/0 | 1/0 | 009_staff_hr.sql |
+| `staff_profiles` | RUNTIME_SQL_CONFIRMED | 6 | 8/3/2/2/0 | 1/0 | 009_staff_hr.sql |
 | `streams` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 001_foundation.sql |
 | `student_attendance` | RUNTIME_SQL_CONFIRMED | 4 | 4/0/1/1/0 | 1/26 | 006_attendance.sql, 034_attendance_academic_scope.sql, 036_attendance_provenance_audit.sql, 049_production_schema_reconciliation.sql, 079_attendance_legacy_schema_compatibility.sql |
 | `student_class_history` | RUNTIME_REFERENCE_WORKFLOW_UNRESOLVED | 1 | 0/0/0/0/0 | 1/0 | 003_students_admissions.sql |
@@ -192,8 +192,8 @@ The machine-readable manifest contains the full source-file list, operation coun
 | `terms` | RUNTIME_SQL_CONFIRMED | 32 | 17/4/1/0/0 | 1/0 | 001_foundation.sql, 060_terms_academic_year_name_unique.sql |
 | `transport_routes` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
 | `transport_vehicles` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
-| `user_roles` | RUNTIME_SQL_CONFIRMED | 13 | 5/13/3/0/0 | 1/0 | 001_foundation.sql, 031_controlled_schema_upgrade.sql |
-| `users` | RUNTIME_SQL_CONFIRMED | 22 | 17/12/2/6/0 | 1/2 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 069_production_user_login_identifiers.sql |
+| `user_roles` | RUNTIME_SQL_CONFIRMED | 15 | 7/14/4/0/1 | 1/0 | 001_foundation.sql, 031_controlled_schema_upgrade.sql |
+| `users` | RUNTIME_SQL_CONFIRMED | 24 | 21/12/2/7/0 | 1/2 | 001_foundation.sql, 031_controlled_schema_upgrade.sql, 069_production_user_login_identifiers.sql |
 | `welfare_incidents` | HISTORICAL_POTENTIALLY_OBSOLETE_OR_INDIRECT | 0 | 0/0/0/0/0 | 1/0 | 011_operations.sql |
 
 ## Authentication and RBAC contracts
@@ -234,7 +234,7 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 
 > **Status: incomplete.** Findings separate observed runtime behavior from a canonical TiDB schema. No executable DDL is approved.
 
-- Table dispositions: {"REQUIRED_CURRENT_RUNTIME":66,"REQUIRED_SUPPORTED_WORKFLOW":5,"LEGACY_COMPATIBILITY_ONLY":1,"OBSOLETE_WITH_EVIDENCE":0,"UNRESOLVED":92}.
+- Table dispositions: {"REQUIRED_CURRENT_RUNTIME":67,"REQUIRED_SUPPORTED_WORKFLOW":5,"LEGACY_COMPATIBILITY_ONLY":1,"OBSOLETE_WITH_EVIDENCE":0,"UNRESOLVED":91}.
 - View dispositions: {"REQUIRED_CURRENT_RUNTIME":0,"REQUIRED_SUPPORTED_WORKFLOW":5,"LEGACY_COMPATIBILITY_ONLY":0,"OBSOLETE_WITH_EVIDENCE":0,"UNRESOLVED":3}.
 - No object is marked obsolete solely because static SQL extraction found no literal query.
 - No ORM/query-builder dependency was found; mysql2 and pg are the declared database clients.
@@ -344,7 +344,7 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `attendance_notification_settings` | UNRESOLVED | 006_attendance.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `attendance_sync_conflicts` | UNRESOLVED | 006_attendance.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `audit_logs` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/existing-student-linking.js, src/single-school-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
-| `auth_sessions` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-database-adapter.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-administrator-credential-reset.js (+4 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `auth_sessions` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-database-adapter.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-administrator-credential-reset.js (+5 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `budget_items` | REQUIRED_CURRENT_RUNTIME | src/budgets.js, src/general-finance.js, src/platform/forward-finance-migration.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `budgets` | REQUIRED_CURRENT_RUNTIME | src/budgets.js, src/financial-authorization.js, src/general-finance.js, src/module-registry.js (+5 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `calendar_events` | UNRESOLVED | 010_communication.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
@@ -365,7 +365,7 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `counselling_records` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `data_breaches` | UNRESOLVED | 013_compliance_privacy.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `data_protection_officers` | UNRESOLVED | 013_compliance_privacy.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
-| `departments` | UNRESOLVED | src/ai/authorization-guard.js | Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths. |
+| `departments` | REQUIRED_CURRENT_RUNTIME | src/ai/authorization-guard.js, src/durable-role-account-provisioning.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `document_versions` | UNRESOLVED | 013_compliance_privacy.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `examination_candidates` | UNRESOLVED | 007_examinations_results.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `examination_marks` | REQUIRED_CURRENT_RUNTIME | src/single-school-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
@@ -397,7 +397,7 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `inventory_items` | UNRESOLVED | 012_resources.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `inventory_movements` | UNRESOLVED | 012_resources.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `invoices` | REQUIRED_CURRENT_RUNTIME | src/admission-form.js, src/ai/financial-intelligence.js, src/ai/system-of-record-readiness.js, src/ai/tidb-readiness.js (+11 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
-| `levels` | REQUIRED_CURRENT_RUNTIME | src/ai/contracts.js, src/durable-academic.js, src/fee-collections-repository.js, src/server.mjs (+1 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `levels` | REQUIRED_CURRENT_RUNTIME | src/ai/contracts.js, src/durable-academic.js, src/durable-admissions.js, src/fee-collections-repository.js (+2 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `library_books` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `library_loans` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `managed_documents` | UNRESOLVED | 013_compliance_privacy.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
@@ -408,7 +408,7 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `osaah_fresh_installations` | REQUIRED_SUPPORTED_WORKFLOW | src/platform/tidb-fresh-initializer.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
 | `parent_auth_challenges` | REQUIRED_CURRENT_RUNTIME | src/parent-sms-auth.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `parent_auth_rate_limits` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-readiness.js, src/auth.js, src/parent-sms-auth.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
-| `parent_student_links` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-announcements.js (+6 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `parent_student_links` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-announcements.js (+7 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `payment_gateway_configs` | UNRESOLVED | 008_fees_finance.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `payments` | REQUIRED_CURRENT_RUNTIME | src/admission-form.js, src/ai/financial-intelligence.js, src/ai/system-of-record-readiness.js, src/ai/tidb-readiness.js (+15 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `permissions` | UNRESOLVED | src/academic-results.js, src/admission-prospectus.js, src/ai/academic-attendance-intelligence.js, src/ai/administration.js (+42 more in manifest) | Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths. |
@@ -422,14 +422,14 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `result_signatures` | UNRESOLVED | 017_academic_results_migration.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `retention_policies` | UNRESOLVED | 013_compliance_privacy.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `role_permissions` | UNRESOLVED | src/auth.js | Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths. |
-| `roles` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/admissions-workforce-intelligence.js, src/ai/capabilities/core.capability.js, src/ai/executive-intelligence.js (+24 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `roles` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/admissions-workforce-intelligence.js, src/ai/capabilities/core.capability.js, src/ai/executive-intelligence.js (+26 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `sample_data_fixtures` | REQUIRED_CURRENT_RUNTIME | src/sample-fixture-repository.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `schema_baselines` | REQUIRED_SUPPORTED_WORKFLOW | src/ai/tidb-database-adapter.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
 | `schema_migration_lock` | REQUIRED_SUPPORTED_WORKFLOW | src/ai/tidb-database-adapter.js, src/platform/forward-finance-migration.js, src/platform/forward-production-reconciliation.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
 | `schema_migration_runs` | REQUIRED_SUPPORTED_WORKFLOW | src/ai/tidb-database-adapter.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
-| `schema_migrations` | REQUIRED_SUPPORTED_WORKFLOW | src/ai/tidb-database-adapter.js, src/platform/assignment-migration-schema.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
+| `schema_migrations` | REQUIRED_SUPPORTED_WORKFLOW | src/admission-schema-diagnostic.js, src/ai/tidb-database-adapter.js, src/platform/assignment-migration-schema.js | Platform metadata column/index definitions and versioned initializer ownership still require canonical DDL review. |
 | `school_property` | UNRESOLVED | 012_resources.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
-| `schools` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-readiness.js, src/auth.js, src/durable-staff-provisioning.js, src/platform/final-result-slip-reconciliation.js (+5 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `schools` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-readiness.js, src/auth.js, src/durable-role-account-provisioning.js, src/durable-staff-provisioning.js (+6 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `shep_activities` | UNRESOLVED | src/auth.js, src/module-registry.js, src/shep-activities.js | Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths. |
 | `shep_activity_attachments` | UNRESOLVED | 021_shep_activities.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `shep_activity_participants` | UNRESOLVED | 021_shep_activities.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
@@ -445,14 +445,14 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `sporting_results` | UNRESOLVED | 019_sporting_activities.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `sporting_sports` | UNRESOLVED | 019_sporting_activities.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `sporting_teams` | UNRESOLVED | 019_sporting_activities.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
-| `staff` | REQUIRED_CURRENT_RUNTIME | src/academic-calendar.js, src/admission-prospectus.js, src/ai/academic-attendance-intelligence.js, src/ai/admissions-workforce-intelligence.js (+34 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `staff` | REQUIRED_CURRENT_RUNTIME | src/academic-calendar.js, src/admission-prospectus.js, src/ai/academic-attendance-intelligence.js, src/ai/admissions-workforce-intelligence.js (+36 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `staff_assignments` | REQUIRED_CURRENT_RUNTIME | src/auth.js, src/durable-staff-provisioning.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `staff_attendance` | REQUIRED_CURRENT_RUNTIME | src/attendance-repository.js, src/single-school-overview.js, src/staff-attendance-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `staff_attendance_reconciliation_audit` | UNRESOLVED | 035_staff_leave_attendance_reconciliation.sql, 049_production_schema_reconciliation.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `staff_documents` | UNRESOLVED | 009_staff_hr.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `staff_leave` | REQUIRED_CURRENT_RUNTIME | src/single-school-overview.js, src/staff-attendance-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `staff_leave_balances` | UNRESOLVED | 009_staff_hr.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
-| `staff_profiles` | REQUIRED_CURRENT_RUNTIME | src/durable-staff-provisioning.js, src/school-profile.js, src/single-school-overview.js, src/staff-attendance-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `staff_profiles` | REQUIRED_CURRENT_RUNTIME | src/durable-role-account-provisioning.js, src/durable-staff-provisioning.js, src/role-provisioning-diagnostic.js, src/school-profile.js (+2 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `streams` | UNRESOLVED | 001_foundation.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `student_attendance` | REQUIRED_CURRENT_RUNTIME | src/ai/tidb-readiness.js, src/attendance-repository.js, src/single-school-overview.js, src/student-attendance-overview.js | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `student_class_history` | UNRESOLVED | src/ai/tidb-readiness.js | Lexical/module references exist but no SQL operation was extracted; inspect indirect, feature-gated, and dynamically assembled paths. |
@@ -480,8 +480,8 @@ Resolve every manifest entry with current source-code evidence, reconcile all hi
 | `terms` | REQUIRED_CURRENT_RUNTIME | src/academic-calendar.js, src/academic-results.js, src/ai/school-context.js, src/ai/system-of-record-readiness.js (+28 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `transport_routes` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 | `transport_vehicles` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
-| `user_roles` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-administrator-credential-reset.js (+9 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
-| `users` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/school-knowledge-intelligence.js, src/ai/tidb-readiness.js, src/auth.js (+18 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `user_roles` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/tidb-readiness.js, src/auth.js, src/durable-administrator-credential-reset.js (+11 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
+| `users` | REQUIRED_CURRENT_RUNTIME | src/admission-enrollment.js, src/ai/school-knowledge-intelligence.js, src/ai/tidb-readiness.js, src/auth.js (+20 more in manifest) | SQL reference exists in a current source path; this does not prove every branch is mandatory on every installation, and optional fallback/readiness use must be reviewed. |
 | `welfare_incidents` | UNRESOLVED | 011_operations.sql | Historical DDL/inventory evidence exists without a statically extracted runtime operation. Absence of an extracted query is not evidence of obsolescence. |
 
 ### All eight view dispositions
