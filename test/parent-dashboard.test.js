@@ -71,8 +71,8 @@ test('same-child re-resolution without a recorded class preserves the Parent aca
   const classes = [{ id: 'class-primary-4', name: 'Primary 4' }];
   for (const missingClass of [null, '', undefined]) {
     assert.deepEqual(parentContextAfterChildResolution(context, {
-      previousChildId: 'OSAAH-DEMO-001',
-      child: { permanentStudentId: 'OSAAH-DEMO-001', classId: missingClass, className: missingClass },
+      previousChildId: 'OSAAH/DEMO/001',
+      child: { permanentStudentId: 'OSAAH/DEMO/001', classId: missingClass, className: missingClass },
       classes
     }), context);
   }
@@ -81,8 +81,8 @@ test('same-child re-resolution without a recorded class preserves the Parent aca
 test('same-child re-resolution with a valid canonical class retains existing synchronization behavior', () => {
   const context = { academicYear: 'year-2026', classId: 'class-primary-4', term: 'term-2' };
   assert.deepEqual(parentContextAfterChildResolution(context, {
-    previousChildId: 'OSAAH-DEMO-001',
-    child: { permanentStudentId: 'OSAAH-DEMO-001', classId: 'class-primary-1', className: 'Primary 1' },
+    previousChildId: 'OSAAH/DEMO/001',
+    child: { permanentStudentId: 'OSAAH/DEMO/001', classId: 'class-primary-1', className: 'Primary 1' },
     classes: [{ id: 'class-primary-1', name: 'Primary 1' }, { id: 'class-primary-4', name: 'Primary 4' }]
   }), { ...context, classId: 'class-primary-1' });
 });
@@ -90,8 +90,8 @@ test('same-child re-resolution with a valid canonical class retains existing syn
 test('a legacy Basic 6 child label resolves to the configured Primary 6 ID without changing the ID', () => {
   const context = { academicYear: 'year-2026', classId: '', term: 'term-2' };
   assert.deepEqual(parentContextAfterChildResolution(context, {
-    previousChildId: 'OSAAH-DEMO-001',
-    child: { permanentStudentId: 'OSAAH-DEMO-001', classId: 'student-class-uuid-6', className: 'Basic 6' },
+    previousChildId: 'OSAAH/DEMO/001',
+    child: { permanentStudentId: 'OSAAH/DEMO/001', classId: 'student-class-uuid-6', className: 'Basic 6' },
     classes: [{ id: 'student-class-uuid-6', name: 'Primary 6' }]
   }), { ...context, classId: 'student-class-uuid-6' });
 });
@@ -99,8 +99,8 @@ test('a legacy Basic 6 child label resolves to the configured Primary 6 ID witho
 test('switching children clears a stale class when the new child has no recorded class', () => {
   const context = { academicYear: 'year-2026', classId: 'class-primary-1', term: 'term-1' };
   assert.deepEqual(parentContextAfterChildResolution(context, {
-    previousChildId: 'OSAAH-DEMO-001',
-    child: { permanentStudentId: 'OSAAH-DEMO-002', classId: null, className: null },
+    previousChildId: 'OSAAH/DEMO/001',
+    child: { permanentStudentId: 'OSAAH/DEMO/002', classId: null, className: null },
     classes: [{ id: 'class-primary-1', name: 'Primary 1' }]
   }), { ...context, classId: '' });
 });
@@ -232,7 +232,7 @@ test('controlled Parent attendance reads use the isolated durable sample fixture
   const parent = createConfiguredTestParent(productionSchoolId);
   const fixture = {
     async getFixture(identity) {
-      assert.equal(identity.sampleStudentId, 'OSAAH-DEMO-001');
+      assert.equal(identity.sampleStudentId, 'OSAAH/DEMO/001');
       assert.equal(identity.academicYearId, 'year-2026');
       assert.equal(identity.termId, 'term-2');
       assert.equal(identity.classId, 'class-primary-6');
@@ -252,11 +252,11 @@ test('controlled Parent attendance reads use the isolated durable sample fixture
     'Nursery 1', 'Nursery 2', 'KG 1', 'KG 2', 'Primary 1', 'Primary 2', 'Primary 3',
     'Primary 4', 'Primary 5', 'Primary 6', 'JHS 1', 'JHS 2', 'JHS 3'
   ]);
-  assert.ok(parentOptions.sampleContexts['OSAAH-DEMO-001'].every((context) => context.classId === 'class-primary-6' && context.provenance === 'TEST'));
-  const result = await service.loadRecord(parent, { permanentStudentId: 'OSAAH-DEMO-001', recordType: 'attendance', academicYear: 'year-2026', classId: 'class-primary-6', term: 'term-2' });
+  assert.ok(parentOptions.sampleContexts['OSAAH/DEMO/001'].every((context) => context.classId === 'class-primary-6' && context.provenance === 'TEST'));
+  const result = await service.loadRecord(parent, { permanentStudentId: 'OSAAH/DEMO/001', recordType: 'attendance', academicYear: 'year-2026', classId: 'class-primary-6', term: 'term-2' });
   assert.deepEqual(result.records.map(({ studentId, term, status }) => ({ studentId, term, status })), [
-    { studentId: 'OSAAH-DEMO-001', term: '2nd Term', status: 'PRESENT' },
-    { studentId: 'OSAAH-DEMO-001', term: '2nd Term', status: 'ABSENT' }
+    { studentId: 'OSAAH/DEMO/001', term: '2nd Term', status: 'PRESENT' },
+    { studentId: 'OSAAH/DEMO/001', term: '2nd Term', status: 'ABSENT' }
   ]);
   assert.equal(result.attendanceSummary.present, 1);
   assert.equal(result.attendanceSummary.absent, 1);
@@ -313,7 +313,7 @@ test('Parent class options include all 13 canonical classes in order and preserv
 
 test('sample context metadata does not narrow the Parent class dropdown', () => {
   const classes = Array.from({ length: 13 }, (_, index) => ({ id: `class-${index}`, name: `Class ${index}` }));
-  assert.deepEqual(parentClassOptions({ classes, sampleContexts: { 'OSAAH-DEMO-001': [{ classId: 'class-9' }] } }), classes);
+  assert.deepEqual(parentClassOptions({ classes, sampleContexts: { 'OSAAH/DEMO/001': [{ classId: 'class-9' }] } }), classes);
 });
 
 test('a class being present in the canonical dropdown does not authorize records without a matching enrollment', async () => {

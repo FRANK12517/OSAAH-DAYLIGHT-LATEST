@@ -115,10 +115,18 @@ test('authorized staff can continue through the normal workflow to the applicati
 
   const admission = page.frameLocator('#module-frame');
   await admission.getByRole('heading', { name: 'Admissions and Registration' }).waitFor();
+  const nextButton = admission.getByRole('button', { name: 'Next', exact: true });
+  await nextButton.waitFor({ state: 'visible' });
+  assert.equal(await nextButton.isEnabled(), true, 'Next is available on the new enquiry form');
   assert.ok(await admission.getByRole('option', { name: 'Basic 2' }).count());
   assert.ok(await admission.getByRole('option', { name: 'Transfer from another school' }).count());
   assert.ok(await admission.getByRole('option', { name: 'First-time applicant' }).count());
   assert.ok(await admission.getByRole('option', { name: 'Already enrolled at OsaaH' }).count());
+
+  const enquiryUrl = page.url();
+  await nextButton.click({ force: true });
+  assert.equal(page.url(), enquiryUrl, 'invalid required fields keep the user on the enquiry form');
+  assert.equal(applicationWrites.length, 0, 'required enquiry fields prevent progression');
 
   const category = admission.locator('select[name="admissionType"]');
   await category.selectOption('FIRST_TIME');
@@ -129,12 +137,21 @@ test('authorized staff can continue through the normal workflow to the applicati
   assert.ok(academicYearValue);
   await admission.locator('[name="academicYear"]').selectOption(academicYearValue);
   await admission.locator('[name="term"]').selectOption({ label: '1st Term' });
-  await admission.getByRole('button', { name: 'Continue to application' }).click({ force: true });
+  await admission.locator('[name="parentPhone"]').fill('invalid-phone');
+  await nextButton.click({ force: true });
+  await admission.getByText('Enter a valid Ghanaian mobile number', { exact: false }).waitFor();
+  assert.equal(applicationWrites.length, 0, 'invalid phone data does not create an application');
+
+  await admission.locator('[name="parentPhone"]').fill('0241234567');
+  await nextButton.click({ force: true });
   await page.frameLocator('#module-frame').getByRole('heading', { name: 'OFFICIAL ADMISSION FORM' }).waitFor();
   assert.equal(applicationWrites.length, 1, 'the normal UI sends one authorized enquiry request');
   assert.equal(applicationWrites[0].method, 'POST');
   assert.equal(applicationWrites[0].payload.admissionType, 'FIRST_TIME');
   assert.equal(applicationWrites[0].payload.classAppliedFor, 'Basic 2');
+  assert.equal(await page.frameLocator('#module-frame').locator('[name="studentFirstName"]').inputValue(), 'Synthetic Browser');
+  assert.equal(await page.frameLocator('#module-frame').locator('[name="studentSurname"]').inputValue(), 'Candidate');
+  assert.equal(await page.frameLocator('#module-frame').locator('[name="primaryGuardianPrimaryPhone"]').inputValue(), '+233241234567');
   assert.equal(continuationResponses.at(-1)?.status, 200, 'the authenticated staff session can fetch the application page');
   assert.match(continuationResponses.at(-1)?.url ?? '', /applicationNumber=APP-/);
   assert.match(continuationResponses.at(-1)?.url ?? '', /step=2/);

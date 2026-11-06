@@ -8,7 +8,7 @@ import { createSampleResultWorkflow } from '../src/sample-result-workflow.js';
 const SCHOOL_ID = 'school-osaah-daylight';
 const YEAR = '2026/2027';
 const TERMS = ['First Term', 'Second Term', 'Third Term'];
-const SAMPLE_IDS = ['OSAAH-DEMO-001', 'OSAAH-DEMO-002'];
+const SAMPLE_IDS = ['OSAAH/DEMO/001', 'OSAAH/DEMO/002'];
 const actor = {
   id: 'part7-sample-qa',
   roleKey: 'HEADTEACHER',
@@ -38,14 +38,24 @@ function saveInput(result, student) {
   };
 }
 
-test('canonical sample identities are unique and never accept slash-form duplicates', () => {
+test('canonical sample identities are unique and reject duplicate or unsupported demo IDs', () => {
   const { students, samples } = setup();
   assert.deepEqual(samples.map((student) => student.permanentStudentId), SAMPLE_IDS);
   assert.equal(new Set(samples.map((student) => student.permanentStudentId)).size, 2);
   assert.equal(students.listStudents().length, 0);
   assert.equal(students.listStudents({ includeTestRecords: true }).length, 2);
-  assert.throws(() => students.createStudent({ firstName: 'Duplicate', surname: 'Slash', permanentStudentId: 'OSAAH/DEM/0001', isTestRecord: true }), /malformed|permanent/i);
-  assert.throws(() => students.createStudent({ firstName: 'Duplicate', surname: 'Demo', permanentStudentId: 'OSAAH/DEMO/002', isTestRecord: true }), /malformed|permanent/i);
+  assert.throws(() => students.createStudent({ firstName: 'Duplicate', surname: 'Slash', permanentStudentId: 'OSAAH/DEMO/001', isTestRecord: true }), /already exists/);
+  assert.throws(() => students.createStudent({ firstName: 'Other', surname: 'Demo', permanentStudentId: 'OSAAH/DEMO/003', isTestRecord: true }), /malformed|permanent/i);
+});
+
+test('legacy demo IDs reconcile in memory to the canonical ID without duplicating sample students', () => {
+  const students = createStudentService({ schoolId: SCHOOL_ID });
+  const legacy = students.createStudent({ firstName: 'Old', surname: 'Demo One', permanentStudentId: 'OSAAH-DEMO-001', isTestRecord: true });
+  const seeded = students.seedSampleStudents();
+  assert.equal(seeded[0].id, legacy.id);
+  assert.equal(seeded[0].permanentStudentId, 'OSAAH/DEMO/001');
+  assert.equal(seeded.length, 2);
+  assert.equal(students.listStudents({ includeTestRecords: true }).length, 2);
 });
 
 test('both canonical samples generate, save, reload, and publish independently for all 13 classes and 3 terms', () => {

@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { averageScore, subjectPositions } from './result-slip.js';
 import { CORE_LEVELS } from './students.js';
+import { isSampleModeEnabled } from './academic-sample-mode.js';
 import { gradeForTotal } from './grading.js';
 import { calculateStudentResult, calculateClassPositions } from './result-calculation.js';
 import { normalizeStudentGender } from './student-gender.js';
+import { SAMPLE_STUDENT_IDS } from './sample-student-identities.js';
 import { classGenderDistribution as sharedClassGenderDistribution } from './gender-distribution.js';
 
 export const RESULT_HEADER_ASSET = '/assets/osaah-result-header.png';
@@ -58,9 +60,9 @@ export function createAcademicResultsService({ now = () => new Date().toISOStrin
     subjectFor(subjectId, classId, actor, academicYear, term);
     const eligibleStudents = students?.listEligibleStudents?.({ requestedSchoolId: schoolId, academicYearId: academicYear, classId, termId: term }) ?? [];
     const roster = [...new Map(eligibleStudents.filter((student) => student.schoolId === schoolId && student.classId === classId && !student.isTestRecord).map((student) => [student.id, student])).values()];
-    const sampleMode = filters.sampleMode === true || String(filters.sampleMode ?? '').toLowerCase() === 'true';
+    const sampleMode = isSampleModeEnabled(filters);
     const sampleRoster = sampleMode
-      ? (students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? []).filter((student) => student.schoolId === schoolId && student.isTestRecord && student.permanentStudentId === 'OSAAH-DEMO-001')
+      ? (students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? []).filter((student) => student.schoolId === schoolId && student.isTestRecord && student.permanentStudentId === SAMPLE_STUDENT_IDS[0])
       : [];
     const selectedRoster = sampleMode ? sampleRoster : roster;
     const scores = listScores({ academicYear, term, classId, subjectId }, actor);
@@ -74,6 +76,13 @@ export function createAcademicResultsService({ now = () => new Date().toISOStrin
   function mockScoreEntryRoster(filters = {}, actor) {
     if (actor?.schoolId !== schoolId || !authorized(actor, 'mock.scores.read') && !authorized(actor, 'mock.scores.write')) throw new Error('Forbidden.');
     assertMockEligible(filters.classId);
+    if (isSampleModeEnabled(filters)) {
+      const samples = (students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? []).filter((item) => item.schoolId === schoolId && item.isTestRecord && SAMPLE_STUDENT_IDS.includes(item.permanentStudentId));
+      return samples.map((student) => {
+        const score = listScores({ ...filters, studentId: student.id }, actor, { mock: true }).find((row) => row.subjectId === filters.subjectId);
+        return { studentId: student.id, permanentStudentId: student.permanentStudentId, studentName: [student.firstName, student.middleName, student.surname].filter(Boolean).join(' '), classId: filters.classId, subjectId: filters.subjectId, totalScore: score?.totalScore ?? null, grade: score?.grade ?? null, saved: Boolean(score), isTestRecord: true };
+      });
+    }
     const eligible = students?.listEligibleStudents?.({ requestedSchoolId: schoolId, academicYearId: filters.academicYear, classId: filters.classId, termId: filters.term, includeTestRecords: false }) ?? [];
     const saved = listScores(filters, actor, { mock: true });
     const byStudent = new Map(saved.map((score) => [score.studentId, score]));

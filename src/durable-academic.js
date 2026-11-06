@@ -3,6 +3,8 @@ import { gradeForTotal } from './grading.js';
 import { canonicalAcademicClass, defaultSubjectForClass, defaultSubjectsForClass, DEFAULT_SUBJECT_CONFIGURATION_VERSION, DEFAULT_SUBJECT_ASSIGNMENT_SLOTS, DEFAULT_DISTINCT_SUBJECT_NAMES } from './default-subject-catalog.js';
 import { calculateStudentResult, calculateClassPositions } from './result-calculation.js';
 import { tidbInsertIfAbsent } from './tidb-conflict.js';
+import { isSampleModeEnabled } from './academic-sample-mode.js';
+import { SAMPLE_STUDENT_IDS } from './sample-student-identities.js';
 
 const rows = (value) => Array.isArray(value) ? value : [];
 const text = (value) => String(value ?? '').trim();
@@ -531,7 +533,7 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
           // Older production student tables identify sample rows only by their
           // permanent ID. Keep official mode isolated without requiring a
           // column that the legacy schema never declared.
-          query = query.replace("s.is_test_record IS NOT TRUE", "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%'");
+          query = query.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' AND s.permanent_student_id NOT LIKE 'OSAAH/DEMO/%'");
           continue;
         }
         if (missingOptionalEnrollmentStateColumn(error) && query.includes('COALESCE(e.enrollment_status')) {
@@ -558,7 +560,7 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
     if (!subject) fail('Subject is invalid for this class and academic context.', 400, 'INVALID_CLASS_SUBJECT');
     const fixtures = students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? [];
     const sampleStudents = fixtures
-      .filter((student) => student.schoolId === schoolId && student.isTestRecord === true && student.permanentStudentId === 'OSAAH-DEMO-001')
+      .filter((student) => student.schoolId === schoolId && student.isTestRecord === true && student.permanentStudentId === SAMPLE_STUDENT_IDS[0])
       .map((student) => ({ studentId: student.id, permanentStudentId: student.permanentStudentId, studentName: [student.firstName, student.middleName, student.surname].filter(Boolean).join(' '), classId, caScore: null, examScore: null, totalScore: null, grade: null, saved: false, isTestRecord: true }));
     return { class: { id: classRow.id, name: classRow.name }, subject: { id: subject.id, name: subject.name }, academicYearId: period.yearId, termId: period.termId, students: sampleStudents };
   }
@@ -595,7 +597,7 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
           continue;
         }
         if (missingOptionalStudentTestRecordColumn(error) && query.includes('s.is_test_record IS NOT TRUE')) {
-          query = query.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%'");
+          query = query.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' AND s.permanent_student_id NOT LIKE 'OSAAH/DEMO/%'");
           continue;
         }
         if (missingOptionalStudentStatusColumn(error) && query.includes("COALESCE(s.student_status,'ACTIVE')='ACTIVE'")) {
@@ -660,15 +662,18 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
 
   async function mockRoster(input = {}, actor) {
     assertActor(actor);
-    if (String(input.sampleMode ?? '').toLowerCase() === 'true' || input.sampleMode === true) {
-      const fixtures = students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? [];
-      const sample = fixtures.find((student) => student.schoolId === schoolId && student.isTestRecord === true && student.permanentStudentId === 'OSAAH-DEMO-001');
-      if (!sample) return [];
+    if (isSampleModeEnabled(input)) {
+      const samples = (students?.listStudents?.({ requestedSchoolId: schoolId, includeTestRecords: true }) ?? []).filter((student) => student.schoolId === schoolId && student.isTestRecord === true && SAMPLE_STUDENT_IDS.includes(student.permanentStudentId));
+      if (!samples.length) return [];
       const mockLabel = text(input.mockLabel);
       if (!mockLabel) fail('Class, subject, and Mock Examination are required.');
-      const scores = await listScores({ ...input, studentId: sample.id }, actor, { mock: true });
-      const score = scores.find((row) => row.subjectId === text(input.subjectId));
-      return [{ studentId: sample.id, permanentStudentId: sample.permanentStudentId, studentName: [sample.firstName, sample.middleName, sample.surname].filter(Boolean).join(' '), classId: text(input.classId), subjectId: text(input.subjectId), totalScore: score?.totalScore ?? null, grade: score?.grade ?? null, saved: Boolean(score), isTestRecord: true }];
+      const result = [];
+      for (const sample of samples) {
+        const scores = await listScores({ ...input, studentId: sample.id }, actor, { mock: true });
+        const score = scores.find((row) => row.subjectId === text(input.subjectId));
+        result.push({ studentId: sample.id, permanentStudentId: sample.permanentStudentId, studentName: [sample.firstName, sample.middleName, sample.surname].filter(Boolean).join(' '), classId: text(input.classId), subjectId: text(input.subjectId), totalScore: score?.totalScore ?? null, grade: score?.grade ?? null, saved: Boolean(score), isTestRecord: true });
+      }
+      return result;
     }
     if (!authorized(actor, 'mock.scores.read') && !authorized(actor, 'mock.scores.write')) fail('Forbidden.', 403, 'ACADEMIC_PERMISSION_REQUIRED');
     const classId = text(input.classId), subjectId = text(input.subjectId), mockLabel = text(input.mockLabel);
@@ -691,7 +696,7 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
       try { result = await database.query(query, rosterParams); break; }
       catch (error) {
         if (missingOptionalEnrollmentStateColumn(error) && query.includes('COALESCE(e.enrollment_status')) { query = query.replace(" AND COALESCE(e.enrollment_status,'ACTIVE')='ACTIVE' AND COALESCE(e.is_current,TRUE) IS TRUE", ''); continue; }
-        if (missingOptionalStudentTestRecordColumn(error) && query.includes('s.is_test_record IS NOT TRUE')) { query = query.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%'"); continue; }
+        if (missingOptionalStudentTestRecordColumn(error) && query.includes('s.is_test_record IS NOT TRUE')) { query = query.replace('s.is_test_record IS NOT TRUE', "s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' AND s.permanent_student_id NOT LIKE 'OSAAH/DEMO/%'"); continue; }
         if (missingOptionalStudentStatusColumn(error) && query.includes("COALESCE(s.student_status,'ACTIVE')='ACTIVE'")) { query = query.replace(" AND COALESCE(s.student_status,'ACTIVE')='ACTIVE'", ''); continue; }
         throw error;
       }
@@ -839,7 +844,7 @@ export function createDurableAcademicService({ database, schoolId, signatures = 
     if (actor?.roleKey === 'TEACHER' && !authorized(actor, 'academics.manage') && !(actor.assignedSubjectIds ?? []).map(String).includes(subjectId)) fail('Subject is outside your assignment.', 403, 'SUBJECT_SCOPE_DENIED');
     let rosterSql = `SELECT DISTINCT s.id AS studentId,s.permanent_student_id AS permanentStudentId,s.first_name AS firstName,s.middle_name AS middleName,s.last_name AS surname
       FROM students s JOIN student_enrollments e ON e.student_id=s.id AND e.school_id=s.school_id
-      WHERE s.school_id=? AND e.class_id=? AND e.academic_year_id=? AND e.term_id=? AND s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' ORDER BY s.last_name,s.first_name,s.id`;
+      WHERE s.school_id=? AND e.class_id=? AND e.academic_year_id=? AND e.term_id=? AND s.permanent_student_id NOT LIKE 'OSAAH-DEMO-%' AND s.permanent_student_id NOT LIKE 'OSAAH/DEMO/%' ORDER BY s.last_name,s.first_name,s.id`;
     const rosterParams = [schoolId, classId, period.yearId, period.termId];
     let students;
     try { students = rows(await database.query(`${rosterSql.replace(' ORDER BY', " AND COALESCE(e.enrollment_status,'ACTIVE')='ACTIVE' AND COALESCE(e.is_current,TRUE) IS TRUE ORDER BY")}`, rosterParams)); }

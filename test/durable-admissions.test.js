@@ -14,7 +14,7 @@ function databaseWithoutEnquiryRequestColumn() {
       if (sql.includes('information_schema.COLUMNS')) return [
         'id', 'school_id', 'application_number', 'stage', 'applicant_data', 'created_at', 'updated_at'
       ].map((columnName) => ({ columnName }));
-      if (sql.startsWith('SELECT id,name FROM classes')) return [{ id: 'class-basic-1', name: 'Basic 1' }];
+      if (sql.startsWith('SELECT id,name FROM classes')) return params[0] === 'sch_default_01' ? [{ id: 'class-basic-1', name: 'Basic 1', school_id: 'sch_default_01' }] : [];
       if (sql.includes('WHERE id=? AND school_id=?')) return [rowsById.get(params[0])].filter(Boolean);
       if (sql.includes('WHERE school_id=? AND application_number=?')) return [...rowsById.values()].filter((row) => row.school_id === params[0] && row.application_number === params[1]);
       throw new Error(`Unexpected query: ${sql}`);
@@ -35,8 +35,8 @@ function databaseWithoutEnquiryRequestColumn() {
 test('durable admission drafts persist and retry safely when production lacks enquiry_request_id', async () => {
   const database = databaseWithoutEnquiryRequestColumn();
   let sequence = 0;
-  const service = createDurableAdmissionsService({ database, schoolId: 'school-osaah-daylight', clock: () => '2026-11-04T12:00:00.000Z', idFactory: () => `generated-${++sequence}` });
-  const actor = { id: 'proprietor-1', roleKey: 'PROPRIETOR', portal: 'school', schoolId: 'school-osaah-daylight' };
+  const service = createDurableAdmissionsService({ database, schoolId: 'sch_default_01', clock: () => '2026-11-04T12:00:00.000Z', idFactory: () => `generated-${++sequence}` });
+  const actor = { id: 'proprietor-1', roleKey: 'PROPRIETOR', portal: 'school', schoolId: 'sch_default_01' };
   const input = { enquiryRequestId: '12345678-1234-4234-8234-123456789012', studentFirstName: 'Demo', studentSurname: 'Student', classAppliedFor: 'Basic 1', admissionType: 'FIRST_TIME' };
 
   const created = await service.createApplication(input, actor);
@@ -49,6 +49,19 @@ test('durable admission drafts persist and retry safely when production lacks en
   assert.doesNotMatch(insert.sql, /enquiry_request_id/);
   assert.equal(JSON.parse(insert.params[columnsFromInsert(insert.sql).indexOf('applicant_data')]).enquiryRequestId, input.enquiryRequestId);
   assert.equal(database.calls.some((call) => /enquiry_request_id/.test(call.sql)), false);
+});
+
+test('admission class lookup rejects a class catalog row from another school', async () => {
+  const database = databaseWithoutEnquiryRequestColumn();
+  const service = createDurableAdmissionsService({ database, schoolId: 'sch_default_01' });
+  const actor = { id: 'other-school-user', roleKey: 'PROPRIETOR', portal: 'school', schoolId: 'sch_other_02' };
+  await assert.rejects(
+    service.createApplication({ studentFirstName: 'Synthetic', studentSurname: 'Applicant', classAppliedFor: 'Basic 1' }, actor),
+    { message: 'Select a valid active school class.' }
+  );
+  const classLookup = database.calls.find((call) => call.sql === 'SELECT id,name FROM classes WHERE school_id=?');
+  assert.deepEqual(classLookup.params, ['sch_other_02']);
+  assert.equal(database.calls.some((call) => call.type === 'execute'), false, 'a foreign school class cannot create an application');
 });
 
 test('class lookup supports legacy class catalogs scoped through levels when classes.school_id is absent', async () => {
