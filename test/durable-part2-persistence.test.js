@@ -57,5 +57,6 @@ test('retries of the same durable enquiry token return one application and norma
   assert.equal(retry.applicationNumber, first.applicationNumber);
   assert.equal(retry.section1.primaryGuardianPrimaryPhone, '+233240000000');
   assert.equal(fixture.admissions.length, 1);
+  assert.equal(fixture.admissions[0].enquiry_request_id, input.enquiryRequestId);
   assert.equal(JSON.parse(fixture.admissions[0].applicant_data).enquiryRequestId, input.enquiryRequestId);
 });
